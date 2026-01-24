@@ -1,26 +1,204 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Clean Canvas Protocol - Base Colors */
+  --color-canvas: #f8fafc;
+  /* slate-50 - Never pure white for backgrounds */
+  --color-surface: #ffffff;
+  /* white - For cards/modals on top of canvas */
+
+  /* Neutral Palette - Inside-Out Border Theory */
+  --color-ink-primary: #0f172a;
+  /* slate-900 - Sharp, high contrast */
+  --color-ink-secondary: #64748b;
+  /* slate-500 - Contextual metadata */
+  --color-ink-tertiary: #94a3b8;
+  /* slate-400 - Icons/placeholders */
+  --color-ink-quaternary: #cbd5e1;
+  /* slate-300 - Dividers/borders */
+
+  /* Intent Colors */
+  --color-intent-brand: #2563eb;
+  /* blue-600 - Trust, action */
+  --color-intent-success: #059669;
+  /* emerald-600 - Positive delta, completion */
+  --color-intent-warning: #f59e0b;
+  /* amber-500 - Attention needed */
+  --color-intent-critical: #e11d48;
+  /* rose-600 - Destructive, errors */
+
+  /* Primary Brand Color */
+  --color-primary: #2563eb;
+  /* blue-600 - Primary actions */
+  --color-primary-400: #60a5fa;
+  /* blue-400 - Hover states */
+
+  /* Custom Background Colors */
+  --color-background-light: #f8fafc;
+  /* slate-50 - Light mode background */
+  --color-background-dark: #0f172a;
+  /* slate-900 - Dark mode background */
+
+  /* Custom Card Colors */
+  --color-card-light: #ffffff;
+  /* white - Light mode card */
+  --color-card-dark: #1e293b;
+  /* slate-800 - Dark mode card */
+
+  /* Custom Border Colors */
+  --color-subtle-border: #e2e8f0;
+  /* slate-200 - Light mode subtle border */
+  --color-subtle-border-dark: #334155;
+  /* slate-700 - Dark mode subtle border */
+
+  /* UI Tokens - Reductionism */
+  --shadow-level-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-level-2: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-level-3: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+
+  --radius-sm: 0.375rem;
+  /* 6px */
+  --radius-md: 0.75rem;
+  /* 12px */
+  --radius-lg: 1rem;
+  /* 16px */
+  --radius-xl: 1.5rem;
+  /* 24px */
+  --radius-pill: 9999px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: var(--color-canvas);
+  --foreground: var(--color-ink-primary);
+}
+
+@utility container-dev {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+@utility hairline-border {
+  border: 1px solid var(--color-ink-quaternary);
+}
+
+@utility ring-subtle {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.05);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* Typography Hierarchy - DESIGN_SYSTEM.md */
+/* Labels: Small, muted, uppercase, wide tracking */
+.text-label {
+  font-size: 0.75rem;
+  /* 12px */
+  font-weight: 600;
+  color: var(--color-ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Data: Large, dark, normal case */
+.text-data {
+  font-size: 0.875rem;
+  /* 14px */
+  font-weight: 400;
+  color: var(--color-ink-primary);
+}
+
+/* Numbers: Monospace for tabular alignment */
+.text-mono {
+  font-family: var(--font-mono);
+}
+
+.text-muted {
+  color: var(--color-ink-secondary);
+}
+
+/* Base Utility Classes for Typography-First Design */
+h1,
+h2,
+h3,
+h4 {
+  color: var(--color-ink-primary);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  /* Tight tracking for headings */
+}
+
+/* Interactive Tactility - Minimum 200ms transitions */
+.transition-fast {
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-natural {
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Press effect for active states */
+.scale-press {
+  transform: scale(0.95);
+}
+
+/* Hover elevation */
+.elevate-hover:hover {
+  box-shadow: var(--shadow-level-2);
+}
+
+/* Custom Utility Classes for Info Page */
+.bg-background-light {
+  background-color: var(--color-background-light);
+}
+
+.dark\:bg-background-dark {
+  background-color: var(--color-background-dark);
+}
+
+.bg-card-light {
+  background-color: var(--color-card-light);
+}
+
+.dark\:bg-card-dark {
+  background-color: var(--color-card-dark);
+}
+
+.border-subtle-border {
+  border-color: var(--color-subtle-border);
+}
+
+.dark\:border-subtle-border-dark {
+  border-color: var(--color-subtle-border-dark);
+}
+
+.shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.dark\:text-primary-400 {
+  color: var(--color-primary-400);
 }

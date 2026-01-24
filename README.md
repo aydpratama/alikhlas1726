@@ -1,36 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistem Manajemen Pemulasaraan Al-Ikhlas
+
+Sistem manajemen pemulasaraan untuk Al-Ikhlas dengan fitur kelola anggota keluarga, tracking iuran bulanan, dan laporan keuangan.
+
+## Fitur
+
+- **Manajemen Anggota Keluarga**
+  - Kelola data anggota dengan sistem keluarga (Kepala Keluarga, Istri, Anak)
+  - Filter berdasarkan jenis anggota, RT, RW
+  - Pencarian berdasarkan nama atau nomor anggota
+
+- **Tracking Iuran Bulanan**
+  - Input dan update iuran bulanan (Januari - Desember)
+  - Status pembayaran real-time per bulan
+  - Filter berdasarkan tahun
+
+- **Laporan & Export**
+  - Export ke PDF dengan format landscape
+  - Daftar anggota lengkap dengan detail pembayaran iuran
+  - Nama dokumen: "DAFTAR ANGGOTA PEMULASARAAN AL-IKHLAS"
+
+- **UI/UX**
+  - Desain modern ala Google AI Studio / Developer Tool UI
+  - Responsif untuk mobile dan desktop
+  - Filter sejajar dalam satu baris yang rapi
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
+- **PDF Generation**: jsPDF + jsPDF-autotable
+- **Icons**: Lucide React
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ installed
+- Supabase project configured
+- Environment variables set (`.env.local`)
+
+### Installation
+
+```bash
+npm install
+```
+
+### Environment Variables
+
+Create `.env.local` file:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+alikhlas2026/
+├── app/
+│   └── pemulasaraan/          # Pemulasaraan module
+├── components/
+│   ├── pemulasaraan/
+│   │   ├── MemberList.tsx     # Member list with filters
+│   │   ├── FamilyCard.tsx     # Family card component
+│   │   ├── MemberDialog.tsx   # Add/Edit member dialog
+│   │   ├── ExportDuesDialog.tsx # Export to PDF dialog
+│   │   └── Laporan.tsx        # Reports view
+│   └── ui/                    # Reusable UI components
+├── hooks/
+│   └── pemulasaraan/
+│       ├── useMembers.ts      # Members data hook
+│       ├── useDues.ts         # Dues data hook
+│       └── useFamilies.ts     # Families data hook
+├── lib/
+│   └── supabase/
+│       └── client.ts          # Supabase client
+└── types/
+    └── membership.ts          # TypeScript types
+```
 
-## Learn More
+## Database Schema
 
-To learn more about Next.js, take a look at the following resources:
+### Members Table
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `id`: Primary key
+- `no_anggota`: Nomor anggota (format: `2/PEM/XXX`)
+- `nama_lengkap`: Nama lengkap
+- `jenis_anggota`: Jenis anggota (Anggota Umum, dll)
+- `hubungan_keluarga`: Hubungan dalam keluarga (Kepala Keluarga, Istri, Anak, Cucu)
+- `tanggal_keanggotaan`: Tanggal bergabung
+- `pendaftaran`: Biaya pendaftaran
+- `alamat`: Alamat lengkap
+- `rt`: RT
+- `rw`: RW
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Kartu Bulanan Table
 
-## Deploy on Vercel
+- `id`: Primary key
+- `kartu_id`: ID kartu
+- `id_anggota`: ID anggota (foreign key)
+- `no_anggota`: Nomor anggota
+- `tahun`: Tahun
+- `bulan_januari` s/d `bulan_desember`: Iuran bulanan
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Design System
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Project menggunakan Google AI Studio / Developer Tool UI style:
+- Clean, flat design dengan border halus
+- Shadow minimal
+- Font: Inter (UI) + JetBrains Mono (code/logs)
+- Layout: AppShell dengan responsive design
+
+Lihat [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) untuk detail lengkap.
+
+## Development Notes
+
+### Urutan Anggota
+
+Urutan default:
+1. Berdasarkan nomor anggota (angka di awal)
+2. Dalam keluarga: Kepala Keluarga → Istri → Anak → Cucu
+
+### Export PDF
+
+- Landscape orientation untuk 20 kolom (8 kolom utama + 12 bulan)
+- Header: "DAFTAR ANGGOTA PEMULASARAAN AL-IKHLAS"
+- Subtitle: "Tahun {year}"
+- Format nominal: Tanpa teks "Rp", hanya angka dengan pemisah ribuan
+
+### Filter State
+
+- Filter di MemberList.tsx sinkron dengan ExportDuesDialog.tsx
+- Data yang ditampilkan sama antara tabel dan export PDF
+
+## License
+
+Private - Al-Ikhlas Pemulasaraan
