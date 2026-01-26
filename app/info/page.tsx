@@ -416,11 +416,37 @@ function ManageModal({
 
       // 2. Save Subsections & Members
       if (teamId) {
-        // Delete existing subsections (cascade will handle members if configured,
-        // but we'll be safe and delete members too if needed, though RLS/Cascade is better)
-        await supabase.from("org_subsections").delete().eq("team_id", teamId);
+        // First, get all subsection IDs for this team to delete members
+        const { data: oldSubsections } = await supabase
+          .from("org_subsections")
+          .select("id")
+          .eq("team_id", teamId);
 
-        for (let i = 0; i < formData.subSections.length; i++) {
+        if (oldSubsections && oldSubsections.length > 0) {
+          const ssIds = oldSubsections.map((s) => s.id);
+          // Delete members first to avoid FK constraint issues
+          const { error: mDelError } = await supabase
+            .from("org_members")
+            .delete()
+            .in("subsection_id", ssIds);
+          if (mDelError) {
+            console.error("Error deleting old members:", mDelError);
+            throw mDelError;
+          }
+        }
+
+        // Now delete subsections
+        const { error: ssDelError } = await supabase
+          .from("org_subsections")
+          .delete()
+          .eq("team_id", teamId);
+
+        if (ssDelError) {
+          console.error("Error deleting old subsections:", ssDelError);
+          throw ssDelError;
+        }
+
+        for (let i = 0; i < (formData.subSections || []).length; i++) {
           const ss = formData.subSections[i];
           const { data: ssData, error: ssError } = await supabase
             .from("org_subsections")
@@ -456,7 +482,13 @@ function ManageModal({
       onSave();
       onClose();
     } catch (error: any) {
-      console.error("Error saving team:", error);
+      console.error("Error saving team:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        error: error,
+      });
       alert(`Gagal menyimpan data: ${error.message || "Unknown error"}`);
     } finally {
       setIsSaving(false);
