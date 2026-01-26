@@ -198,7 +198,7 @@ export function LaporanKeuanganSection() {
   };
 
   return (
-    <section className="py-12 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <section className="py-12 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
@@ -250,7 +250,7 @@ export function LaporanKeuanganSection() {
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group"
+                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -363,7 +363,7 @@ export function LaporanKeuanganSection() {
                             bulan: Number(e.target.value),
                           })
                         }
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-100"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-100"
                       >
                         {BULAN_NAMES.map((m, i) => (
                           <option key={m} value={i + 1}>
@@ -384,7 +384,7 @@ export function LaporanKeuanganSection() {
                             tahun: Number(e.target.value),
                           })
                         }
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-100"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-100"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -398,7 +398,7 @@ export function LaporanKeuanganSection() {
                             minggu_ke: Number(e.target.value),
                           })
                         }
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-100"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-100"
                       >
                         {[1, 2, 3, 4, 5].map((w) => (
                           <option key={w} value={w}>
@@ -422,7 +422,7 @@ export function LaporanKeuanganSection() {
                             saldo_awal: Number(e.target.value),
                           })
                         }
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -481,7 +481,7 @@ export function LaporanKeuanganSection() {
                           url_file_pdf: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
                       placeholder="https://..."
                     />
                   </div>

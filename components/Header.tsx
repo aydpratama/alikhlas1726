@@ -38,7 +38,7 @@ export function Header() {
 
     return (
         <header
-            className="sticky top-0 left-0 right-0 z-50 bg-white backdrop-blur-md border-b border-slate-100 shadow-sm"
+            className="sticky top-0 left-0 right-0 z-50 bg-white backdrop-blur-md border-b border-slate-200 shadow-sm"
             role="banner"
         >
             <div className="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
@@ -89,7 +89,7 @@ export function Header() {
                 <div className="flex items-center gap-2">
                     <Link
                         href="/admin/login"
-                        className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white hover:text-slate-900 transition-colors border border-slate-100 rounded-full bg-emerald-600 hover:bg-slate-50 hover:shadow-md active:scale-95"
+                        className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white hover:text-slate-900 transition-colors border border-slate-200 rounded-full bg-emerald-600 hover:bg-slate-50 hover:shadow-md active:scale-95"
                     >
                         <LogIn className="w-3.5 h-3.5" />
                         <span>Sign In</span>
@@ -136,7 +136,7 @@ export function Header() {
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-xl overflow-hidden shadow-lg"
+                        className="md:hidden border-t border-slate-200 bg-white/95 backdrop-blur-xl overflow-hidden shadow-lg"
                     >
                         <div className="p-4 space-y-1">
                             {navigationItems.map((item, index) => {
@@ -167,7 +167,7 @@ export function Header() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2, delay: navigationItems.length * 0.05 }}
-                                className="pt-2 mt-2 border-t border-slate-100"
+                                className="pt-2 mt-2 border-t border-slate-200"
                             >
                                 <Link
                                     href="/admin/login"

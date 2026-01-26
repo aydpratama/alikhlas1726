@@ -723,7 +723,7 @@ export function DonaturTetap() {
                     type="text"
                     value={newDonorName}
                     onChange={(e) => setNewDonorName(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-200 transition-all text-sm"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-200 transition-all text-sm"
                     placeholder="Masukkan nama donatur..."
                     required
                   />
@@ -859,7 +859,7 @@ export function DonaturTetap() {
             </h4>
           </div>
         </div>
-        <div className="bg-[#F8F9FA] rounded-md sm:rounded-md p-6 sm:p-8 text-slate-900 border border-slate-100 shadow-sm">
+        <div className="bg-[#F8F9FA] rounded-md sm:rounded-md p-6 sm:p-8 text-slate-900 border border-slate-200 shadow-sm">
           <div className="flex flex-col gap-0.5 sm:gap-1">
             <p className="text-[10px] sm:text-[11px] font-bold tracking-widest text-slate-500">
               Persentase Keaktifan

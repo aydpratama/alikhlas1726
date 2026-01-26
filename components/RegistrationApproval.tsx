@@ -204,7 +204,7 @@ export function RegistrationApproval({ isAdminProp, isAdminLoadingProp, onDataCh
                             </div>
 
                             {/* List Anggota */}
-                            <div className="divide-y divide-slate-100">
+                            <div className="divide-y divide-slate-200">
                                 {members.map((reg) => (
                                     <div key={reg.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
                                         <div className="space-y-1">
@@ -231,7 +231,7 @@ export function RegistrationApproval({ isAdminProp, isAdminLoadingProp, onDataCh
                             </div>
 
                             {/* Action Footer: Bulk Actions */}
-                            <div className="bg-slate-50/50 px-4 py-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
+                            <div className="bg-slate-50/50 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
                                 <p className="text-[10px] font-medium text-slate-400">
                                     Total: <span className="text-slate-900 font-bold">{members.length} Anggota</span> •
                                     Estimasi Biaya: <span className="text-emerald-600 font-bold">Rp {members.reduce((sum, m) => sum + (m.biaya_pendaftaran || 0), 0).toLocaleString()}</span>

@@ -38,7 +38,7 @@ Ini adalah parameter mentah yang saya gunakan untuk menentukan "rasa" (feel) dar
       }
     },
     "depth": {
-      "flat": "border border-slate-100",
+      "flat": "border border-slate-200",
       "floating": "shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]",
       "lifted": "shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)]",
       "glass": "backdrop-blur-md bg-white/70 border-white/20"
@@ -100,8 +100,8 @@ UI statis itu mati. UI yang bagus itu *hidup*.
 
 ### V. VISUAL NOISE REDUCTION (Pengurangan Kebisingan)
 1.  **Border vs Background:**
-    *   Daripada menggunakan border garis tegas (`border border-slate-200`), coba gunakan perbedaan background (`bg-slate-50` vs `bg-white`).
-    *   Jika harus pakai border, gunakan warna yang sangat tipis (`border-slate-100`).
+102→    *   Daripada menggunakan border garis tegas (`border border-slate-200`), coba gunakan perbedaan background (`bg-slate-50` vs `bg-white`).
+103→    *   Jika harus pakai border, gunakan warna yang sangat tipis (`border-slate-200`).
 2.  **Badge/Label:**
     *   Jangan gunakan warna solid (`bg-green-500 text-white`) untuk status sekunder, terlalu menyita perhatian.
     *   Gunakan gaya "Subtle": `bg-green-50 text-green-700 border border-green-200`.

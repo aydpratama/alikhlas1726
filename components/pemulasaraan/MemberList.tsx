@@ -183,7 +183,7 @@ export function MemberListView({
         </div>
 
         {/* Row 2: Combined Filters */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 pt-3 border-t border-slate-100">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 pt-3 border-t border-slate-200">
           <div className="flex items-center gap-2 text-slate-400 min-w-fit">
             <Filter className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
@@ -303,7 +303,7 @@ export function MemberListView({
             <button
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="flex items-center gap-1 px-4 h-11 sm:h-10 text-sm font-medium rounded-full border border-slate-100 hover:shadow-md hover:border-emerald-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:border-slate-100"
+              className="flex items-center gap-1 px-4 h-11 sm:h-10 text-sm font-medium rounded-full border border-slate-200 hover:shadow-md hover:border-emerald-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:border-slate-200"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="hidden xs:inline">Sebelumnya</span>
@@ -313,7 +313,7 @@ export function MemberListView({
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-4 h-11 sm:h-10 text-sm font-medium rounded-full border border-slate-100 hover:shadow-md hover:border-emerald-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:border-slate-100"
+              className="flex items-center gap-1 px-4 h-11 sm:h-10 text-sm font-medium rounded-full border border-slate-200 hover:shadow-md hover:border-emerald-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:border-slate-200"
             >
               <span className="hidden xs:inline">Selanjutnya</span>
               <ChevronRight className="w-4 h-4" />

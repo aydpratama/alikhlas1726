@@ -131,9 +131,7 @@ export default function LeaveManagementClient() {
       return "Durasi harus berupa angka positif";
     }
 
-    const selectedType = leaveTypes.find(
-      (t) => t.id === formData.leaveTypeId,
-    );
+    const selectedType = leaveTypes.find((t) => t.id === formData.leaveTypeId);
     if (
       selectedType?.is_deductible &&
       balance &&
@@ -301,7 +299,7 @@ export default function LeaveManagementClient() {
 
       {/* Actions & History */}
       <Card className="border-slate-200 shadow-sm overflow-hidden">
-        <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between">
+        <CardHeader className="border-b border-slate-200 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg">Riwayat Pengajuan</CardTitle>
             <CardDescription>Daftar pengajuan cuti Anda</CardDescription>
@@ -513,7 +511,7 @@ export default function LeaveManagementClient() {
                     </div>
                   </div>
                 </div>
-                <DialogFooter className="sticky bottom-0 bg-white pt-4 border-t border-slate-100">
+                <DialogFooter className="sticky bottom-0 bg-white pt-4 border-t border-slate-200">
                   <Button
                     type="button"
                     variant="outline"

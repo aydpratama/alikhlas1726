@@ -40,7 +40,7 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
       icon: CreditCard,
       content: (
         <div className="space-y-4">
-          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
@@ -69,7 +69,7 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
                   </span>
                   <button
                     onClick={() => handleCopy("725401029653531", "acc-num")}
-                    className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all border border-slate-100"
+                    className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all border border-slate-200"
                   >
                     {copied === "acc-num" ? (
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -91,7 +91,7 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
                     onClick={() =>
                       handleCopy("PEMULASARAAN AL IKHLAS", "acc-name")
                     }
-                    className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all border border-slate-100"
+                    className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all border border-slate-200"
                   >
                     {copied === "acc-name" ? (
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -113,7 +113,7 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
       content: (
         <div className="space-y-4">
           <div className="bg-white rounded-2xl p-6 border-2 border-dashed border-emerald-100 text-center shadow-inner">
-            <div className="relative w-48 h-48 mx-auto bg-slate-50 rounded-xl flex items-center justify-center mb-4 overflow-hidden border border-slate-100">
+            <div className="relative w-48 h-48 mx-auto bg-slate-50 rounded-xl flex items-center justify-center mb-4 overflow-hidden border border-slate-200">
               <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white">
                 <QrCode className="w-20 h-20 text-slate-200 mb-2" />
                 <p className="text-[10px] font-bold text-slate-400">
@@ -137,7 +137,7 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
               {["GoPay", "OVO", "DANA", "LinkAja", "BCA"].map((app) => (
                 <span
                   key={app}
-                  className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-full text-[9px] font-bold border border-slate-100"
+                  className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-full text-[9px] font-bold border border-slate-200"
                 >
                   {app}
                 </span>
@@ -153,7 +153,7 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
       icon: HandCoins,
       content: (
         <div className="space-y-4">
-          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:bg-white hover:shadow-md transition-all">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:bg-white hover:shadow-md transition-all">
             <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-4">
               <HandCoins className="w-5 h-5 text-emerald-600" />
             </div>
@@ -307,7 +307,7 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
                     Rp. 1.000.000
                   </p>
                 </div>
-                <div className="space-y-1 pt-2 border-t border-slate-200/50">
+                <div className="space-y-1 pt-2 border-t border-slate-200">
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
                     Anggota Keluarga:
                   </p>

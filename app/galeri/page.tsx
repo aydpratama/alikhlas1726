@@ -313,7 +313,7 @@ export default function GaleriPage() {
     <div className="min-h-screen bg-white">
       <Header />
 
-      <section className="py-16 md:py-24 bg-gray-50">
+      <section className="py-16 md:py-24 bg-gray-50 border-b border-slate-200">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
@@ -541,7 +541,7 @@ export default function GaleriPage() {
                   </label>
                 )}
               </div>
-              <div className="flex gap-3 pt-4 border-t border-slate-100">
+              <div className="flex gap-3 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsDialogOpen(false)}

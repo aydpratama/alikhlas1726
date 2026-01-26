@@ -354,7 +354,7 @@ export function InfoSections() {
               [1, 2].map((i) => (
                 <div
                   key={i}
-                  className="bg-white border border-slate-100 rounded-md overflow-hidden animate-pulse"
+                  className="bg-white border border-slate-200 rounded-md overflow-hidden animate-pulse"
                 >
                   <div className="aspect-video bg-slate-100" />
                   <div className="p-4 space-y-2">
@@ -663,7 +663,7 @@ export function InfoSections() {
       </div>
 
       {/* Donation & Donor Section - Full Width */}
-      <div className="lg:col-span-3 mt-8 border-t border-slate-100 pt-12 space-y-20">
+      <div className="lg:col-span-3 mt-8 border-t border-slate-200 pt-12 space-y-20">
         <DonaturTetap />
         <DonationSection />
       </div>
@@ -1042,7 +1042,7 @@ export function InfoSections() {
               className="bg-white w-full max-w-3xl max-h-[90vh] rounded-md shadow-2xl overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 border-b border-slate-100 flex items-start justify-between">
+              <div className="p-6 border-b border-slate-200 flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="w-4 h-4 text-emerald-600" />

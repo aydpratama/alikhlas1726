@@ -8,32 +8,60 @@ import {
   Building2,
   BookOpen,
   HandCoins,
-  Heart,
   Home,
   Users2,
+  Settings2,
+  Plus,
+  Trash2,
+  Edit2,
+  Save,
+  X,
+  Loader2,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { MosqueIcon } from "@/components/MosqueIcon";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
+
+// Icon mapping for Lucide
+const iconMap: Record<string, React.ElementType> = {
+  GraduationCap,
+  HeartHandshake,
+  Users,
+  Briefcase,
+  Building2,
+  BookOpen,
+  HandCoins,
+  Home,
+  Users2,
+};
 
 interface Member {
+  id?: string;
   name: string;
   role?: string;
   initials?: string;
 }
 
 interface SubSection {
+  id?: string;
   title: string;
   members: Member[];
 }
 
 interface TeamCard {
+  id?: string;
   title: string;
   subtitle: string;
-  icon: React.ElementType;
+  icon: string | React.ElementType;
   color: string;
   coordinator?: Member;
+  coordinator_name?: string;
+  coordinator_role?: string;
   subSections: SubSection[];
   highlightMode?: boolean;
+  highlight_mode?: boolean;
+  order_index?: number;
 }
 
 const organizationData = {
@@ -41,228 +69,6 @@ const organizationData = {
   subtitle: "Masjid Al-Ikhlas RT.001/RW.017 & 026 Kayuringinjaya",
   documentNumber: "Nomor: 008/DKM-AL-IKHLAS/05/2024",
 };
-
-const teams: TeamCard[] = [
-  {
-    title: "Penasihat",
-    subtitle: "Advisors",
-    icon: Users,
-    color: "blue",
-    highlightMode: true,
-    subSections: [
-      {
-        title: "Ketua RW 17",
-        members: [{ name: "Ketua RW 17" }],
-      },
-      {
-        title: "Ketua RW 26",
-        members: [{ name: "Ketua RW 26" }],
-      },
-      {
-        title: "Penasihat",
-        members: [{ name: "DR. Mardishaf Ramli" }],
-      },
-    ],
-  },
-  {
-    title: "Pembina",
-    subtitle: "Supervisors",
-    icon: Building2,
-    color: "purple",
-    highlightMode: true,
-    subSections: [
-      {
-        title: "Pembina",
-        members: [
-          { name: "Mulyadi Ruslin" },
-          { name: "Suyitno" },
-          { name: "Heri Wahyudi" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Pimpinan Utama",
-    subtitle: "Main Leadership",
-    icon: Briefcase,
-    color: "red",
-    highlightMode: true,
-    subSections: [
-      {
-        title: "Ketua",
-        members: [{ name: "Adnan Brawijaya" }],
-      },
-      {
-        title: "Sekertaris Umum",
-        members: [{ name: "Kamiso" }],
-      },
-      {
-        title: "Bendahara Umum",
-        members: [{ name: "Sepyan Uhyandi" }],
-      },
-      {
-        title: "Korbid Ibadah",
-        members: [{ name: "Karimul A'la" }],
-      },
-      {
-        title: "Korbid Jama'ah",
-        members: [{ name: "Budiyono" }],
-      },
-    ],
-  },
-  {
-    title: "Sekretaris Umum",
-    subtitle: "General Secretariat",
-    icon: BookOpen,
-    color: "indigo",
-    coordinator: { name: "Kamiso", role: "Ketua Korbid" },
-    subSections: [
-      {
-        title: "Sekretaris",
-        members: [
-          { name: "Devi Irmawan" },
-          { name: "Hafidz" },
-          { name: "Teguh" },
-        ],
-      },
-      {
-        title: "Rumah Tangga",
-        members: [{ name: "Setiawan" }, { name: "Sudiat" }],
-      },
-      {
-        title: "Pemulasaraan",
-        members: [{ name: "Imam Mahmudi" }],
-      },
-    ],
-  },
-  {
-    title: "Tim Pemulasaraan",
-    subtitle: "Funeral Service Team",
-    icon: HeartHandshake,
-    color: "green",
-    coordinator: { name: "Kamiso", role: "Koordinator" },
-    subSections: [
-      {
-        title: "Bidang",
-        members: [{ name: "Imam Mahmudi" }],
-      },
-      {
-        title: "Sekretaris",
-        members: [{ name: "Edi Prawoko" }],
-      },
-      {
-        title: "Bendahara",
-        members: [{ name: "Sudiat" }],
-      },
-      {
-        title: "Anggota Tim Laki-Laki",
-        members: [
-          { name: "M. Amin" },
-          { name: "Mahmud" },
-          { name: "Eko R" },
-          { name: "Joko Sriyanto" },
-          { name: "Giyanto" },
-        ],
-      },
-      {
-        title: "Anggota Tim Perempuan",
-        members: [
-          { name: "Enung" },
-          { name: "Muslimah" },
-          { name: "Rahayu Reni" },
-          { name: "Ratih Heri" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Bendahara Umum",
-    subtitle: "General Treasury",
-    icon: HandCoins,
-    color: "yellow",
-    coordinator: { name: "Sepyan Uhyandi", role: "Ketua Korbid" },
-    subSections: [
-      {
-        title: "Bendahara",
-        members: [{ name: "Wagiono" }],
-      },
-      {
-        title: "Sosial",
-        members: [{ name: "Bu Acha R Suksenda" }],
-      },
-    ],
-  },
-  {
-    title: "Korbid Ibadah/Dakwah",
-    subtitle: "Worship & Da'wah Division",
-    icon: Home,
-    color: "teal",
-    coordinator: { name: "Karimul A'la", role: "Ketua Korbid" },
-    subSections: [
-      {
-        title: "Ibadah Reguler",
-        members: [{ name: "Zainal A" }],
-      },
-      {
-        title: "Ramadhan",
-        members: [{ name: "Nanang" }],
-      },
-      {
-        title: "Qurban",
-        members: [{ name: "Endang Suranata" }],
-      },
-      {
-        title: "MTKI",
-        members: [{ name: "Hj Enung Sepyan" }],
-      },
-      {
-        title: "MTKA",
-        members: [{ name: "qhofar" }, { name: "Yudi" }],
-      },
-    ],
-  },
-  {
-    title: "Korbid Jama'ah",
-    subtitle: "Congregation Division",
-    icon: Users2,
-    color: "orange",
-    coordinator: { name: "Budiyono", role: "Ketua Korbid" },
-    subSections: [
-      {
-        title: "PHBI",
-        members: [{ name: "Haris Priyono" }],
-      },
-      {
-        title: "IRMA",
-        members: [{ name: "Faiz" }],
-      },
-      {
-        title: "ZIS",
-        members: [{ name: "Eko Rahmadi" }],
-      },
-      {
-        title: "TPQ",
-        members: [{ name: "Hapidin" }, { name: "Anis" }],
-      },
-    ],
-  },
-  {
-    title: "Tim Guru",
-    subtitle: "Teacher Team",
-    icon: GraduationCap,
-    color: "pink",
-    subSections: [
-      {
-        title: "Tim Guru TPQ - Kepala",
-        members: [{ name: "Anis" }],
-      },
-      {
-        title: "Anggota",
-        members: [{ name: "Yuyun" }, { name: "Nisa" }, { name: "Halimah" }],
-      },
-    ],
-  },
-];
 
 const colorConfig = {
   green: {
@@ -466,21 +272,44 @@ function SectionDivider({ text }: { text: string }) {
   );
 }
 
-function TeamCard({ team }: { team: TeamCard }) {
-  const config = colorConfig[team.color as keyof typeof colorConfig];
-  const Icon = team.icon;
+function TeamCard({
+  team,
+  isManageMode,
+  onEdit,
+}: {
+  team: TeamCard;
+  isManageMode?: boolean;
+  onEdit?: (team: TeamCard) => void;
+}) {
+  const config =
+    colorConfig[team.color as keyof typeof colorConfig] || colorConfig.blue;
+  const Icon =
+    typeof team.icon === "string" ? iconMap[team.icon] || Users : team.icon;
 
   return (
     <div
-      className={`${config.bg} rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] p-5 border ${config.border} relative overflow-hidden group`}
+      className={`${config.bg} rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] p-5 border ${config.border} relative overflow-hidden group h-full flex flex-col`}
     >
       <div
         className={`absolute -top-10 -right-10 w-32 h-32 ${config.decorative} rounded-full blur-2xl group-hover:${config.text}/10 transition-colors duration-500`}
       ></div>
 
       <div className="flex flex-col items-center gap-3 mb-6 relative z-10 text-center">
-        <div className={`${config.iconBg} p-2 rounded-xl ${config.iconText}`}>
-          <Icon className="w-5 h-5" />
+        <div className="flex justify-between w-full items-start">
+          <div className="w-10" /> {/* Spacer */}
+          <div className={`${config.iconBg} p-2 rounded-xl ${config.iconText}`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          <div className="w-10 flex justify-end">
+            {isManageMode && onEdit && (
+              <button
+                onClick={() => onEdit(team)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
         <div className="leading-tight">
           <h3 className="text-lg font-bold text-gray-900">{team.title}</h3>
@@ -496,22 +325,25 @@ function TeamCard({ team }: { team: TeamCard }) {
         </div>
       )}
 
-      <div className="relative z-10 space-y-4">
-        {team.subSections.map((subSection, idx) => (
-          <div key={idx}>
+      <div className="relative z-10 space-y-4 flex-1">
+        {team.subSections?.map((subSection, idx) => (
+          <div key={subSection.id || idx}>
             {subSection.title && <SectionDivider text={subSection.title} />}
             <div className="space-y-3">
-              {subSection.members.map((member, memberIdx) =>
+              {subSection.members?.map((member, memberIdx) =>
                 team.highlightMode ? (
                   <CoordinatorHighlight
-                    key={memberIdx}
+                    key={member.id || memberIdx}
                     member={{ ...member, role: subSection.title }}
                     config={config}
                     showBadge={false}
                     centered={false}
                   />
                 ) : (
-                  <MemberListItem key={memberIdx} member={member} />
+                  <MemberListItem
+                    key={member.id || memberIdx}
+                    member={member}
+                  />
                 ),
               )}
             </div>
@@ -522,7 +354,512 @@ function TeamCard({ team }: { team: TeamCard }) {
   );
 }
 
+function ManageModal({
+  team,
+  teamsCount,
+  onClose,
+  onSave,
+}: {
+  team: TeamCard | null;
+  teamsCount: number;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  const [formData, setFormData] = useState<any>(
+    team || {
+      title: "",
+      subtitle: "",
+      icon: "Users",
+      color: "blue",
+      highlight_mode: false,
+      coordinator_name: "",
+      coordinator_role: "",
+      subSections: [],
+    },
+  );
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function handleSave() {
+    try {
+      setIsSaving(true);
+
+      // Prepare clean team data
+      const teamData = {
+        title: formData.title,
+        subtitle: formData.subtitle,
+        icon: formData.icon,
+        color: formData.color,
+        highlight_mode: formData.highlight_mode || false,
+        coordinator_name: formData.coordinator_name,
+        coordinator_role: formData.coordinator_role,
+        order_index: team?.order_index ?? teamsCount,
+      };
+
+      let teamId = team?.id;
+
+      // 1. Save Team
+      if (teamId) {
+        const { error: teamError } = await supabase
+          .from("org_teams")
+          .update(teamData)
+          .eq("id", teamId);
+        if (teamError) throw teamError;
+      } else {
+        const { data, error: teamError } = await supabase
+          .from("org_teams")
+          .insert(teamData)
+          .select()
+          .single();
+        if (teamError) throw teamError;
+        teamId = data.id;
+      }
+
+      // 2. Save Subsections & Members
+      if (teamId) {
+        // Delete existing subsections (cascade will handle members if configured,
+        // but we'll be safe and delete members too if needed, though RLS/Cascade is better)
+        await supabase.from("org_subsections").delete().eq("team_id", teamId);
+
+        for (let i = 0; i < formData.subSections.length; i++) {
+          const ss = formData.subSections[i];
+          const { data: ssData, error: ssError } = await supabase
+            .from("org_subsections")
+            .insert({
+              team_id: teamId,
+              title: ss.title,
+              order_index: i,
+            })
+            .select()
+            .single();
+
+          if (ssError) throw ssError;
+
+          if (ssData && ss.members?.length > 0) {
+            const membersToInsert = ss.members
+              .filter((m: any) => m.name.trim() !== "")
+              .map((m: any, mIdx: number) => ({
+                subsection_id: ssData.id,
+                name: m.name,
+                order_index: mIdx,
+              }));
+
+            if (membersToInsert.length > 0) {
+              const { error: mError } = await supabase
+                .from("org_members")
+                .insert(membersToInsert);
+              if (mError) throw mError;
+            }
+          }
+        }
+      }
+
+      onSave();
+      onClose();
+    } catch (error: any) {
+      console.error("Error saving team:", error);
+      alert(`Gagal menyimpan data: ${error.message || "Unknown error"}`);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function addSubSection() {
+    setFormData({
+      ...formData,
+      subSections: [...formData.subSections, { title: "", members: [] }],
+    });
+  }
+
+  function removeSubSection(idx: number) {
+    const newSS = [...formData.subSections];
+    newSS.splice(idx, 1);
+    setFormData({ ...formData, subSections: newSS });
+  }
+
+  function addMember(ssIdx: number) {
+    const newSS = [...formData.subSections];
+    newSS[ssIdx].members = [...newSS[ssIdx].members, { name: "" }];
+    setFormData({ ...formData, subSections: newSS });
+  }
+
+  function removeMember(ssIdx: number, mIdx: number) {
+    const newSS = [...formData.subSections];
+    newSS[ssIdx].members.splice(mIdx, 1);
+    setFormData({ ...formData, subSections: newSS });
+  }
+
+  function updateMember(ssIdx: number, mIdx: number, name: string) {
+    const newSS = [...formData.subSections];
+    newSS[ssIdx].members[mIdx].name = name;
+    setFormData({ ...formData, subSections: newSS });
+  }
+
+  function updateSubSectionTitle(ssIdx: number, title: string) {
+    const newSS = [...formData.subSections];
+    newSS[ssIdx].title = title;
+    setFormData({ ...formData, subSections: newSS });
+  }
+
+  async function handleDelete() {
+    if (!team?.id || !confirm("Hapus tim ini?")) return;
+    try {
+      setIsSaving(true);
+      await supabase.from("org_teams").delete().eq("id", team.id);
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error("Error deleting team:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-gray-50">
+          <h3 className="text-xl font-bold text-gray-900">
+            {team ? "Edit Tim" : "Tambah Tim Baru"}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-emerald-600 uppercase tracking-wider">
+              Informasi Dasar
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Nama Tim (ID)
+                </label>
+                <input
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                  className="w-full px-4 py-2 bg-gray-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Contoh: Penasihat"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Subtitle (EN)
+                </label>
+                <input
+                  value={formData.subtitle}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subtitle: e.target.value })
+                  }
+                  className="w-full px-4 py-2 bg-gray-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Contoh: Advisors"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Warna
+                </label>
+                <select
+                  value={formData.color}
+                  onChange={(e) =>
+                    setFormData({ ...formData, color: e.target.value })
+                  }
+                  className="w-full px-4 py-2 bg-gray-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {Object.keys(colorConfig).map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Icon
+                </label>
+                <select
+                  value={formData.icon}
+                  onChange={(e) =>
+                    setFormData({ ...formData, icon: e.target.value })
+                  }
+                  className="w-full px-4 py-2 bg-gray-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {Object.keys(iconMap).map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 py-2">
+              <input
+                type="checkbox"
+                id="highlight_mode"
+                checked={formData.highlight_mode}
+                onChange={(e) =>
+                  setFormData({ ...formData, highlight_mode: e.target.checked })
+                }
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+              />
+              <label
+                htmlFor="highlight_mode"
+                className="text-sm font-medium text-gray-700"
+              >
+                Highlight Mode (Gunakan card besar untuk anggota)
+              </label>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200 pt-6">
+            <h4 className="text-sm font-bold text-emerald-600 uppercase tracking-wider mb-4">
+              Koordinator (Opsional)
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Nama Koordinator
+                </label>
+                <input
+                  value={formData.coordinator_name || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      coordinator_name: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 bg-gray-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Jabatan Koordinator
+                </label>
+                <input
+                  value={formData.coordinator_role || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      coordinator_role: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 bg-gray-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200 pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-sm font-bold text-emerald-600 uppercase tracking-wider">
+                Subseksi & Anggota
+              </h4>
+              <button
+                onClick={addSubSection}
+                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" />
+                Tambah Subseksi
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {formData.subSections.map((ss: any, ssIdx: number) => (
+                <div
+                  key={ssIdx}
+                  className="bg-gray-50 rounded-2xl p-4 border border-slate-200 relative group/ss"
+                >
+                  <button
+                    onClick={() => removeSubSection(ssIdx)}
+                    className="absolute top-2 right-2 p-1 text-gray-300 hover:text-red-500 opacity-0 group-hover/ss:opacity-100 transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="mb-4">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
+                      Judul Subseksi
+                    </label>
+                    <input
+                      value={ss.title}
+                      onChange={(e) =>
+                        updateSubSectionTitle(ssIdx, e.target.value)
+                      }
+                      className="w-full bg-transparent border-b border-slate-200 py-1 font-bold text-gray-800 focus:border-blue-500 outline-none"
+                      placeholder="Contoh: Sekretaris"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
+                      Daftar Anggota
+                    </label>
+                    {ss.members?.map((m: any, mIdx: number) => (
+                      <div key={mIdx} className="flex gap-2 items-center">
+                        <input
+                          value={m.name}
+                          onChange={(e) =>
+                            updateMember(ssIdx, mIdx, e.target.value)
+                          }
+                          className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                          placeholder="Nama Anggota"
+                        />
+                        <button
+                          onClick={() => removeMember(ssIdx, mIdx)}
+                          className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => addMember(ssIdx)}
+                      className="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-gray-400 hover:border-blue-200 hover:text-blue-500 transition-all text-xs font-bold flex items-center justify-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Tambah Anggota
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {formData.subSections.length === 0 && (
+                <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-2xl">
+                  <p className="text-gray-400 text-sm">Belum ada subseksi.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 bg-gray-50 border-t border-slate-200 flex justify-between gap-3">
+          {team && (
+            <button
+              onClick={handleDelete}
+              disabled={isSaving}
+              className="px-6 py-2 bg-white text-red-600 border border-red-200 rounded-xl font-bold hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Hapus
+            </button>
+          )}
+          <div className="flex gap-3 ml-auto">
+            <button
+              onClick={onClose}
+              disabled={isSaving}
+              className="px-6 py-2 bg-white text-gray-600 border border-slate-200 rounded-xl font-bold hover:bg-gray-100 transition-colors disabled:opacity-50"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-blue-500/20"
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              Simpan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function InfoPage() {
+  const [teams, setTeams] = useState<TeamCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isManageMode, setIsManageMode] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<TeamCard | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  function handleToggleManage() {
+    if (isManageMode) {
+      setIsManageMode(false);
+      return;
+    }
+
+    if (isAuthorized) {
+      setIsManageMode(true);
+      return;
+    }
+
+    const pass = window.prompt("Masukkan kata sandi pengurus:");
+    if (pass === "alikhlas2026") {
+      setIsAuthorized(true);
+      setIsManageMode(true);
+    } else if (pass !== null) {
+      alert("Kata sandi salah!");
+    }
+  }
+
+  async function fetchData() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("org_teams")
+        .select(
+          `
+          *,
+          subSections:org_subsections(
+            *,
+            members:org_members(*)
+          )
+        `,
+        )
+        .order("order_index");
+
+      if (error) throw error;
+
+      const sortedData =
+        data?.map((team: any) => ({
+          ...team,
+          highlightMode: team.highlight_mode,
+          coordinator: team.coordinator_name
+            ? {
+                name: team.coordinator_name,
+                role: team.coordinator_role,
+              }
+            : undefined,
+          subSections: team.subSections
+            ?.sort(
+              (a: any, b: any) => (a.order_index || 0) - (b.order_index || 0),
+            )
+            .map((ss: any) => ({
+              ...ss,
+              members: ss.members?.sort(
+                (a: any, b: any) => (a.order_index || 0) - (b.order_index || 0),
+              ),
+            })),
+        })) || [];
+
+      setTeams(sortedData);
+    } catch (error) {
+      console.error("Error fetching org data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fdfdfc]">
       <Header />
@@ -533,6 +870,32 @@ export default function InfoPage() {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+
+        {/* Manage Toggle */}
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <button
+            onClick={handleToggleManage}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all shadow-lg ${
+              isManageMode
+                ? "bg-blue-600 text-white"
+                : "bg-white/90 backdrop-blur text-gray-700 hover:bg-white"
+            }`}
+          >
+            <Settings2
+              className={`w-4 h-4 ${isManageMode ? "animate-spin-slow" : ""}`}
+            />
+            {isManageMode ? "Keluar Kelola" : "Kelola Struktur"}
+          </button>
+          {isManageMode && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold transition-all shadow-lg hover:bg-emerald-700"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Tim
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 py-8 w-full">
@@ -549,12 +912,36 @@ export default function InfoPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teams.map((team, idx) => (
-            <TeamCard key={idx} team={team} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+            <p className="text-gray-500 font-medium">Memuat data struktur...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {teams.map((team) => (
+              <TeamCard
+                key={team.id}
+                team={team}
+                isManageMode={isManageMode}
+                onEdit={(t) => setEditingTeam(t)}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      {(editingTeam || showAddModal) && (
+        <ManageModal
+          team={editingTeam}
+          teamsCount={teams.length}
+          onClose={() => {
+            setEditingTeam(null);
+            setShowAddModal(false);
+          }}
+          onSave={fetchData}
+        />
+      )}
     </div>
   );
 }

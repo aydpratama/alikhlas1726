@@ -64,7 +64,7 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
           {bankAccounts.map((account, index) => (
             <div
               key={index}
-              className="bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4"
+              className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -100,7 +100,7 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
                           `${account.bank}-number`,
                         )
                       }
-                      className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all border border-slate-100"
+                      className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all border border-slate-200"
                     >
                       {copiedAccount === `${account.bank}-number` ? (
                         <CheckCircle className="w-4 h-4 text-emerald-600" />
@@ -125,7 +125,7 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
                           `${account.bank}-name`,
                         )
                       }
-                      className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all border border-slate-100"
+                      className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all border border-slate-200"
                     >
                       {copiedAccount === `${account.bank}-name` ? (
                         <CheckCircle className="w-4 h-4 text-emerald-600" />
@@ -157,7 +157,7 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
       content: (
         <div className="space-y-6">
           <div className="bg-white rounded-2xl p-8 border-2 border-dashed border-emerald-100 text-center shadow-inner">
-            <div className="relative w-48 h-48 mx-auto bg-slate-50 rounded-xl flex items-center justify-center mb-6 overflow-hidden border border-slate-100">
+            <div className="relative w-48 h-48 mx-auto bg-slate-50 rounded-xl flex items-center justify-center mb-6 overflow-hidden border border-slate-200">
               {/* QR Code Placeholder or Real Image */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white">
                 <QrCode className="w-20 h-20 text-slate-200 mb-2" />
@@ -183,7 +183,7 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
                 (app) => (
                   <span
                     key={app}
-                    className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-full text-[9px] font-bold border border-slate-100"
+                    className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-full text-[9px] font-bold border border-slate-200"
                   >
                     {app}
                   </span>
@@ -209,7 +209,7 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
       content: (
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:bg-white hover:shadow-md transition-all">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:bg-white hover:shadow-md transition-all">
               <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center mb-4">
                 <HandCoins className="w-5 h-5 text-amber-600" />
               </div>
@@ -235,7 +235,7 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
                 </li>
               </ul>
             </div>
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:bg-white hover:shadow-md transition-all">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:bg-white hover:shadow-md transition-all">
               <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-4">
                 <HandCoins className="w-5 h-5 text-emerald-600" />
               </div>
@@ -351,15 +351,15 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
             publik.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-bold text-slate-400 tracking-wider">
-            <div className="flex items-center justify-center gap-2 bg-slate-50 py-3 rounded-md border border-slate-100">
+            <div className="flex items-center justify-center gap-2 bg-slate-50 py-3 rounded-md border border-slate-200">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Rekening Resmi</span>
             </div>
-            <div className="flex items-center justify-center gap-2 bg-slate-50 py-3 rounded-md border border-slate-100">
+            <div className="flex items-center justify-center gap-2 bg-slate-50 py-3 rounded-md border border-slate-200">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Audit Terbuka</span>
             </div>
-            <div className="flex items-center justify-center gap-2 bg-slate-50 py-3 rounded-md border border-slate-100">
+            <div className="flex items-center justify-center gap-2 bg-slate-50 py-3 rounded-md border border-slate-200">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Penggunaan Tepat</span>
             </div>
