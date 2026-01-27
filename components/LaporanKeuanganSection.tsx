@@ -18,6 +18,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useCallback } from "react";
 
+import { useAdmin } from "@/hooks/useAdmin";
+
 // Types
 interface LaporanKeuangan {
   id: number;
@@ -61,7 +63,7 @@ const initialFormData = {
 };
 
 export function LaporanKeuanganSection() {
-  const canManageFinance = true; // Temporary open for CRUD without auth
+  const { canManageFinance } = useAdmin();
   const [laporan, setLaporan] = useState<LaporanKeuangan[]>([]);
   const [loading, setLoading] = useState(true);
 

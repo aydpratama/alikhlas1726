@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 export function useMembers() {
     const [members, setMembers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-
-    const supabase = createClient();
 
     const refreshMembers = async () => {
         setIsLoading(true);

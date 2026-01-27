@@ -2,37 +2,48 @@
 
 import { useState, useEffect } from "react";
 import { RegistrationApproval } from "@/components/RegistrationApproval";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/Toast";
 import {
   Search,
   RotateCcw,
-  User,
   ShieldAlert,
   CheckCircle2,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { toTitleCase } from "@/lib/utils";
 
 interface OthersViewProps {
   isAdmin: boolean;
+  isSuperAdmin?: boolean;
+  profile?: any;
   onDataChange: () => void;
 }
 
-export function OthersView({ isAdmin, onDataChange }: OthersViewProps) {
-  const [subTab, setSubTab] = useState<"approval" | "password">("approval");
+export function OthersView({
+  isAdmin,
+  isSuperAdmin,
+  profile,
+  onDataChange,
+}: OthersViewProps) {
+  const [activeTab, setActiveTab] = useState<"cuti" | "pendaftaran" | "password">(
+    profile?.peran === "imam" || profile?.peran === "marbot" ? "cuti" : "pendaftaran"
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
+  const isImamOrMarbot = profile?.peran === "imam" || profile?.peran === "marbot";
+
   // Search members who have accounts
   useEffect(() => {
-    if (subTab !== "password") return;
+    if (activeTab !== "password") return;
 
     const fetchMembers = async () => {
       setLoading(true);
-      const supabase = createClient();
 
       // Fetch members joined with their accounts
       let query = supabase
@@ -62,7 +73,7 @@ export function OthersView({ isAdmin, onDataChange }: OthersViewProps) {
 
     const timer = setTimeout(fetchMembers, 500);
     return () => clearTimeout(timer);
-  }, [searchTerm, subTab]);
+  }, [searchTerm, activeTab]);
 
   const handleResetPassword = async (id_anggota: number, name: string) => {
     if (
@@ -73,7 +84,6 @@ export function OthersView({ isAdmin, onDataChange }: OthersViewProps) {
       return;
     }
 
-    const supabase = createClient();
     const { error } = await supabase
       .from("member_accounts")
       .delete()
@@ -87,38 +97,76 @@ export function OthersView({ isAdmin, onDataChange }: OthersViewProps) {
     }
   };
 
-  if (!isAdmin) return null;
+  // If not admin/imam/marbot, don't show anything
+  if (!isAdmin && !isImamOrMarbot) return null;
 
   return (
     <div className="space-y-6">
       {/* Sub-Tab Navigation */}
-      <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm max-w-md">
+      <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-full sm:w-fit overflow-x-auto no-scrollbar">
         <button
-          onClick={() => setSubTab("approval")}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all ${
-            subTab === "approval"
+          onClick={() => setActiveTab("cuti")}
+          className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+            activeTab === "cuti"
               ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
               : "text-gray-500 hover:bg-gray-50"
           }`}
         >
-          Persetujuan Pendaftaran
+          <Calendar className="w-4 h-4" />
+          Tab Cuti
         </button>
-        <button
-          onClick={() => setSubTab("password")}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all ${
-            subTab === "password"
-              ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
-              : "text-gray-500 hover:bg-gray-50"
-          }`}
-        >
-          Reset Password Member
-        </button>
+        
+        {/* Only Super Admin can see Pendaftaran & Password Reset */}
+        {isSuperAdmin && (
+          <>
+            <button
+              onClick={() => setActiveTab("pendaftaran")}
+              className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                activeTab === "pendaftaran"
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              Persetujuan Pendaftaran
+            </button>
+            <button
+              onClick={() => setActiveTab("password")}
+              className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                activeTab === "password"
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              Reset Password Member
+            </button>
+          </>
+        )}
       </div>
 
       <AnimatePresence mode="wait">
-        {subTab === "approval" ? (
+        {activeTab === "cuti" && (
           <motion.div
-            key="approval"
+            key="cuti"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center"
+          >
+            <Calendar className="w-12 h-12 mx-auto mb-4 text-emerald-200" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              {isImamOrMarbot ? "Pengajuan Cuti" : "Persetujuan Cuti"}
+            </h3>
+            <p className="text-gray-500 text-sm max-w-sm mx-auto">
+              {isImamOrMarbot 
+                ? "Halaman pengajuan cuti sedang dalam pengembangan." 
+                : "Halaman persetujuan cuti sedang dalam pengembangan."}
+            </p>
+          </motion.div>
+        )}
+
+        {activeTab === "pendaftaran" && isSuperAdmin && (
+          <motion.div
+            key="pendaftaran"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
@@ -129,7 +177,9 @@ export function OthersView({ isAdmin, onDataChange }: OthersViewProps) {
               onDataChange={onDataChange}
             />
           </motion.div>
-        ) : (
+        )}
+
+        {activeTab === "password" && isSuperAdmin && (
           <motion.div
             key="password"
             initial={{ opacity: 0, x: 10 }}
@@ -181,11 +231,11 @@ export function OthersView({ isAdmin, onDataChange }: OthersViewProps) {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold">
-                          {m.nama_lengkap.charAt(0)}
+                          {m.nama_lengkap.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors uppercase text-xs">
-                            {m.nama_lengkap}
+                          <p className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors text-xs">
+                            {toTitleCase(m.nama_lengkap)}
                           </p>
                           <p className="text-[10px] text-gray-500 font-medium tracking-wide">
                             RT {m.rt}/RW {m.rw} • {m.no_anggota}

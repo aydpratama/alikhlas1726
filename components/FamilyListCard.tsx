@@ -11,6 +11,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toTitleCase } from "@/lib/utils";
 import {
     Users,
     MapPin,
@@ -160,7 +161,7 @@ export function FamilyListCard({
                                             {/* Name and Badges in one compact line */}
                                             <div className="flex items-center gap-1 mb-1 flex-wrap">
                                                 <span className="text-sm sm:text-base text-gray-900 font-medium truncate">
-                                                    {member.nama_lengkap}
+                                                    {toTitleCase(member.nama_lengkap)}
                                                 </span>
                                                 <Badge
                                                     variant="outline"

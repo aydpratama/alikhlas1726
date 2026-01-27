@@ -14,6 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAdmin } from "@/hooks/useAdmin";
 
 interface Study {
   id: number;
@@ -24,6 +25,7 @@ interface Study {
 }
 
 export function WeeklyKajianSchedule() {
+  const { canManageContent } = useAdmin();
   const [activeWeek, setActiveWeek] = useState(1);
   const [todayWeek, setTodayWeek] = useState(1);
   const [studies, setStudies] = useState<Study[]>([]);
@@ -191,13 +193,15 @@ export function WeeklyKajianSchedule() {
 
       {/* Week Navigation + Add Button */}
       <div className="flex flex-row items-center justify-center gap-3">
-        <button
-          onClick={openCreate}
-          className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all duration-200 shadow-sm"
-          title="Tambah Jadwal"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+        {canManageContent && (
+          <button
+            onClick={openCreate}
+            className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all duration-200 shadow-sm"
+            title="Tambah Jadwal"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        )}
 
         {/* Week Tabs */}
         <div className="flex bg-slate-100 p-1 rounded-md border border-slate-200">
@@ -259,22 +263,24 @@ export function WeeklyKajianSchedule() {
                       className="group p-4 bg-gray-900 hover:bg-gray-700/50 rounded-md transition-colors relative"
                     >
                       {/* Action Buttons */}
-                      <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => openEdit(study)}
-                          className="w-7 h-7 rounded-full bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 flex items-center justify-center transition-all"
-                          title="Edit"
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(study.id)}
-                          className="w-7 h-7 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-300 flex items-center justify-center transition-all"
-                          title="Hapus"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+                      {canManageContent && (
+                        <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openEdit(study)}
+                            className="w-7 h-7 rounded-full bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 flex items-center justify-center transition-all"
+                            title="Edit"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(study.id)}
+                            className="w-7 h-7 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-300 flex items-center justify-center transition-all"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
 
                       {/* Content */}
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 pr-16">

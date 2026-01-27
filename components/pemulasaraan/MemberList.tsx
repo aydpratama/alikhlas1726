@@ -17,6 +17,7 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
+import { toTitleCase } from "@/lib/utils";
 
 interface MemberListViewProps {
   members: Member[];
@@ -70,16 +71,31 @@ export function MemberListView({
     setSearchTerm("");
   };
 
-  const filteredMembers = members.filter((member) => {
-    const matchSearch =
-      member.nama_lengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.no_anggota.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchJenisAnggota =
-      !filterJenisAnggota || member.jenis_anggota === filterJenisAnggota;
-    const matchRt = !filterRt || member.rt === parseInt(filterRt);
-    const matchRw = !filterRw || member.rw === parseInt(filterRw);
-    return matchSearch && matchJenisAnggota && matchRt && matchRw;
-  });
+  const filteredMembers = (() => {
+    // 1. Dapatkan semua ID keluarga (no_anggota prefix) yang cocok dengan kriteria pencarian/filter
+    const matchingFamilyIds = new Set(
+      members
+        .filter((member) => {
+          const matchSearch =
+            !searchTerm ||
+            member.nama_lengkap
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            member.no_anggota.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchJenisAnggota =
+            !filterJenisAnggota || member.jenis_anggota === filterJenisAnggota;
+          const matchRt = !filterRt || member.rt === parseInt(filterRt);
+          const matchRw = !filterRw || member.rw === parseInt(filterRw);
+          return matchSearch && matchJenisAnggota && matchRt && matchRw;
+        })
+        .map((m) => m.no_anggota.split(".")[0]),
+    );
+
+    // 2. Kembalikan SEMUA anggota yang memiliki ID keluarga yang cocok
+    return members.filter((member) =>
+      matchingFamilyIds.has(member.no_anggota.split(".")[0]),
+    );
+  })();
 
   // Group members by Family
   const families = Object.values(

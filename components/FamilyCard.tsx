@@ -13,8 +13,9 @@ import {
   UserPlus,
   FileText,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/Toast";
+import { toTitleCase } from "@/lib/utils";
 
 export type FamilyMember = {
   id?: number;
@@ -149,7 +150,6 @@ export function FamilyCard({
     if (!editingKartu) return;
 
     setIsSaving(true);
-    const supabase = createClient();
     const year = selectedYear || new Date().getFullYear();
 
     try {
@@ -659,7 +659,7 @@ export function FamilyCard({
               </button>
             )}
 
-            {isAdmin && (
+            {isAdmin ? (
               <div className="flex items-center bg-white shadow-sm border border-slate-200 rounded-lg p-0.5 overflow-hidden">
                 <button
                   onClick={handleExportCSV}
@@ -677,6 +677,14 @@ export function FamilyCard({
                   PDF
                 </button>
               </div>
+            ) : (
+              <button
+                onClick={handleExportPDF}
+                className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-[11px] font-bold hover:bg-indigo-100 transition-all shadow-sm active:scale-95"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export Iuran ke PDF
+              </button>
             )}
           </div>
         </div>
@@ -697,7 +705,7 @@ export function FamilyCard({
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-bold text-gray-900">
-                    {member.nama_lengkap}
+                    {toTitleCase(member.nama_lengkap)}
                   </h4>
                   {isAdmin && (
                     <div className="flex gap-1">
@@ -714,7 +722,7 @@ export function FamilyCard({
                         <button
                           onClick={() => {
                             if (
-                              confirm(`Hapus anggota "${member.nama_lengkap}"?`)
+                              confirm(`Hapus anggota "${toTitleCase(member.nama_lengkap)}"?`)
                             ) {
                               onDeleteMember(member.id!);
                             }

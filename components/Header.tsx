@@ -10,16 +10,30 @@ import {
     Heart,
     BookOpen,
     LogIn,
+    LogOut,
     MoreHorizontal,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MosqueIcon } from "@/components/MosqueIcon";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAdmin } from "@/hooks/useAdmin";
+import { supabase } from "@/lib/supabase";
 
 export function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const pathname = usePathname();
+    const { userEmail, isMember } = useAdmin();
+
+    const handleLogout = async () => {
+        if (userEmail) {
+            await supabase.auth.signOut();
+        }
+        if (isMember) {
+            localStorage.removeItem("member_session");
+        }
+        window.location.href = "/";
+    };
 
     const navigationItems = [
         { label: "Beranda", icon: Home, href: "/" },
@@ -87,13 +101,23 @@ export function Header() {
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-2">
-                    <Link
-                        href="/admin/login"
-                        className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white hover:text-slate-900 transition-colors border border-slate-200 rounded-full bg-emerald-600 hover:bg-slate-50 hover:shadow-md active:scale-95"
-                    >
-                        <LogIn className="w-3.5 h-3.5" />
-                        <span>Sign In</span>
-                    </Link>
+                    {userEmail || isMember ? (
+                        <button
+                            onClick={handleLogout}
+                            className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white transition-colors border border-slate-200 rounded-full bg-red-600 hover:bg-red-700 hover:shadow-md active:scale-95"
+                        >
+                            <LogOut className="w-3.5 h-3.5" />
+                            <span>Keluar</span>
+                        </button>
+                    ) : (
+                        <Link
+                            href="/admin/login"
+                            className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white transition-colors border border-slate-200 rounded-full bg-emerald-600 hover:bg-emerald-700 hover:shadow-md active:scale-95"
+                        >
+                            <LogIn className="w-3.5 h-3.5" />
+                            <span>Masuk</span>
+                        </Link>
+                    )}
 
                     {/* Mobile Menu Toggle - Morphing Icon */}
                     <button
@@ -169,14 +193,27 @@ export function Header() {
                                 transition={{ duration: 0.2, delay: navigationItems.length * 0.05 }}
                                 className="pt-2 mt-2 border-t border-slate-200"
                             >
-                                <Link
-                                    href="/admin/login"
-                                    className="flex items-center space-x-3 px-4 py-3 rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700 hover:text-white"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    <LogIn className="w-4 h-4 text-white" />
-                                    <span>Sign In</span>
-                                </Link>
+                                {userEmail || isMember ? (
+                                    <button
+                                        onClick={() => {
+                                            handleLogout();
+                                            setMobileMenuOpen(false);
+                                        }}
+                                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-full bg-red-600 text-white font-medium hover:bg-red-700"
+                                    >
+                                        <LogOut className="w-4 h-4 text-white" />
+                                        <span>Keluar</span>
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href="/admin/login"
+                                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        <LogIn className="w-4 h-4 text-white" />
+                                        <span>Masuk</span>
+                                    </Link>
+                                )}
                             </motion.div>
                         </div>
                     </motion.nav>

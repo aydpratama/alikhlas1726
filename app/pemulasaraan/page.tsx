@@ -15,6 +15,7 @@ import { FamilyCard, FamilyMember } from "@/components/FamilyCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, FileText, Info as InfoIcon, LayoutGrid } from "lucide-react";
 import Image from "next/image";
+import { toTitleCase } from "@/lib/utils";
 
 export default function PemulasaraanPage() {
   const {
@@ -23,16 +24,19 @@ export default function PemulasaraanPage() {
     familyNo,
     isLoading: isAdminLoading,
     userEmail,
+    profile,
   } = useAdmin();
   const [activeTab, setActiveTab] = useState(isMember ? "my-card" : "info");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [hasSetInitialTab, setHasSetInitialTab] = useState(false);
 
-  // Set default tab for member if they just logged in
+  // Set default tab for member when loaded
   useEffect(() => {
-    if (isMember && activeTab === "info") {
+    if (isMember && !hasSetInitialTab) {
       setActiveTab("my-card");
+      setHasSetInitialTab(true);
     }
-  }, [isMember, activeTab]);
+  }, [isMember, hasSetInitialTab]);
 
   // Hooks
   const {
@@ -124,8 +128,11 @@ export default function PemulasaraanPage() {
         return (
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="bg-emerald-600 p-6 rounded-2xl text-white shadow-lg shadow-emerald-200">
-              <h3 className="text-lg font-bold">
-                Halo, {familyMembers[0].nama_lengkap}
+              <h3 className="text-lg font-bold !text-white">
+                Halo,{" "}
+                <span className="!text-white">
+                  {toTitleCase(familyMembers[0].nama_lengkap)}
+                </span>
               </h3>
               <p className="text-emerald-50 text-sm">
                 Berikut adalah kartu iuran pemulasaraan keluarga Anda.
@@ -172,10 +179,14 @@ export default function PemulasaraanPage() {
           <ReportView year={selectedYear} duesData={dues} members={members} />
         );
       case "lainnya":
-        if (!isSuperAdmin) return null;
+        const isImamOrMarbot =
+          profile?.peran === "imam" || profile?.peran === "marbot";
+        if (!isSuperAdmin && !isImamOrMarbot) return null;
         return (
           <OthersView
             isAdmin={isSuperAdmin}
+            isSuperAdmin={isSuperAdmin}
+            profile={profile}
             onDataChange={() => {
               mutateMembers();
               mutateDues();
@@ -259,10 +270,16 @@ export default function PemulasaraanPage() {
               ...(isMember
                 ? [{ id: "my-card", label: "Kartu Saya", icon: FileText }]
                 : []),
-              ...(isSuperAdmin
+              ...(isSuperAdmin ||
+              profile?.peran === "imam" ||
+              profile?.peran === "marbot"
                 ? [
-                    { id: "member", label: "Anggota", icon: Users },
-                    { id: "laporan", label: "Laporan", icon: FileText },
+                    ...(isSuperAdmin
+                      ? [
+                          { id: "member", label: "Anggota", icon: Users },
+                          { id: "laporan", label: "Laporan", icon: FileText },
+                        ]
+                      : []),
                     { id: "lainnya", label: "Lainnya", icon: LayoutGrid },
                   ]
                 : []),

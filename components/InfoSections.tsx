@@ -22,6 +22,7 @@ import {
   FileText,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAdmin } from "@/hooks/useAdmin";
 
 interface Announcement {
   id: number;
@@ -61,6 +62,7 @@ const MONTH_NAMES = [
 ];
 
 export function InfoSections() {
+  const { canManageContent, canManageFinance } = useAdmin();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [finance, setFinance] = useState<FinancialReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -436,46 +438,48 @@ export function InfoSections() {
                   </div>
 
                   {/* Inline Actions */}
-                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedAnnouncement(ann);
-                        setIsDetailModalOpen(true);
-                      }}
-                      className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all shadow-sm"
-                      title="Lihat Detail"
-                    >
-                      <Info className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAnnForm({
-                          id: ann.id,
-                          title: ann.title,
-                          description: ann.description,
-                          date: "",
-                          gallery: ann.gallery,
-                        });
-                        setIsAnnModalOpen(true);
-                      }}
-                      className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-600 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center transition-all shadow-sm"
-                      title="Edit"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAnnDelete(ann.id);
-                      }}
-                      className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-600 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-all shadow-sm"
-                      title="Hapus"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  {canManageContent && (
+                    <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAnnouncement(ann);
+                          setIsDetailModalOpen(true);
+                        }}
+                        className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all shadow-sm"
+                        title="Lihat Detail"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAnnForm({
+                            id: ann.id,
+                            title: ann.title,
+                            description: ann.description,
+                            date: "",
+                            gallery: ann.gallery,
+                          });
+                          setIsAnnModalOpen(true);
+                        }}
+                        className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-600 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center transition-all shadow-sm"
+                        title="Edit"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAnnDelete(ann.id);
+                        }}
+                        className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-600 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-all shadow-sm"
+                        title="Hapus"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
@@ -489,24 +493,26 @@ export function InfoSections() {
           </div>
 
           {/* Add Announcement Button */}
-          <div className="flex justify-center">
-            <button
-              onClick={() => {
-                setAnnForm({
-                  id: 0,
-                  title: "",
-                  description: "",
-                  date: new Date().toISOString().split("T")[0],
-                  gallery: [] as string[],
-                });
-                setIsAnnModalOpen(true);
-              }}
-              className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Tambah Pengumuman
-            </button>
-          </div>
+          {canManageContent && (
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  setAnnForm({
+                    id: 0,
+                    title: "",
+                    description: "",
+                    date: new Date().toISOString().split("T")[0],
+                    gallery: [] as string[],
+                  });
+                  setIsAnnModalOpen(true);
+                }}
+                className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Tambah Pengumuman
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -519,54 +525,56 @@ export function InfoSections() {
           <p className="text-sm text-slate-500">
             Transparansi laporan keuangan masjid setiap minggu
           </p>
-          <div className="flex justify-center gap-1.5 mt-3">
-            <button
-              onClick={() => {
-                setFinForm({
-                  id: 0,
-                  month: new Date().getMonth() + 1,
-                  year: new Date().getFullYear(),
-                  week: 1,
-                  initialBalance: 0,
-                  income: 0,
-                  expense: 0,
-                  url_file_pdf: "",
-                });
-                setIsFinModalOpen(true);
-              }}
-              className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-            {finance && (
-              <>
-                <button
-                  onClick={() => {
-                    setFinForm({
-                      id: finance.id,
-                      month: finance.month,
-                      year: finance.year,
-                      week: finance.week,
-                      initialBalance: finance.initialBalance,
-                      income: finance.income,
-                      expense: finance.expense,
-                      url_file_pdf: finance.url_file_pdf || "",
-                    });
-                    setIsFinModalOpen(true);
-                  }}
-                  className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-800 hover:text-white transition-all shadow-sm"
-                >
-                  <Pencil className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => handleFinDelete(finance.id)}
-                  className="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </>
-            )}
-          </div>
+          {canManageFinance && (
+            <div className="flex justify-center gap-1.5 mt-3">
+              <button
+                onClick={() => {
+                  setFinForm({
+                    id: 0,
+                    month: new Date().getMonth() + 1,
+                    year: new Date().getFullYear(),
+                    week: 1,
+                    initialBalance: 0,
+                    income: 0,
+                    expense: 0,
+                    url_file_pdf: "",
+                  });
+                  setIsFinModalOpen(true);
+                }}
+                className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+              {finance && (
+                <>
+                  <button
+                    onClick={() => {
+                      setFinForm({
+                        id: finance.id,
+                        month: finance.month,
+                        year: finance.year,
+                        week: finance.week,
+                        initialBalance: finance.initialBalance,
+                        income: finance.income,
+                        expense: finance.expense,
+                        url_file_pdf: finance.url_file_pdf || "",
+                      });
+                      setIsFinModalOpen(true);
+                    }}
+                    className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleFinDelete(finance.id)}
+                    className="w-7 h-7 rounded-full bg-red-100 text-red-700 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {loading ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase";
 import {
   Calendar,
   Clock,
@@ -42,7 +42,6 @@ import {
 const MOCK_USER_ID = 1; // Temporary mock until auth is integrated
 
 export default function LeaveManagementClient() {
-  const supabase = createClient();
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [balance, setBalance] = useState<LeaveBalance | null>(null);

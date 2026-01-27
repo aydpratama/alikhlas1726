@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Lightbox } from "@/components/Lightbox";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/hooks/useAdmin";
 import {
   uploadFile,
@@ -67,7 +67,6 @@ export default function GaleriPage() {
     setLoading(true);
     setImageLoadingStates({}); // Reset loading states
     console.log("🔄 Fetching gallery data...");
-    const supabase = createClient();
     try {
       // Fetch categories
       const { data: categoriesData, error: catError } = await supabase
@@ -196,9 +195,9 @@ export default function GaleriPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
-    const supabase = createClient();
+    if (isSaving) return;
 
+    setIsSaving(true);
     try {
       let imageUrl = formData.url_gambar;
 
@@ -255,8 +254,6 @@ export default function GaleriPage() {
 
   const handleDelete = async (id: number, imageUrl: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus gambar ini?")) return;
-
-    const supabase = createClient();
 
     if (imageUrl) {
       await deleteFile(imageUrl, "gallery");

@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
-import { X, CheckCircle } from "lucide-react";
+import { X, CheckCircle2 } from "lucide-react";
 import { FamilyMember } from "@/components/FamilyCard";
+import { toTitleCase } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 interface MemberDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: Omit<FamilyMember, "id">) => Promise<void>;
-  editingMember?: FamilyMember | null;
+  editingMember: FamilyMember | null;
 }
-
-import { createClient } from "@/lib/supabase/client";
 
 export function MemberDialog({
   isOpen,
@@ -24,9 +24,9 @@ export function MemberDialog({
     jenis_anggota: "Umum",
     tanggal_keanggotaan: new Date().toISOString().split("T")[0],
     alamat: "",
-    rt: 1,
-    rw: 8,
-    pendaftaran: 0,
+    rt: 1 as number | string,
+    rw: 8 as number | string,
+    pendaftaran: "" as number | string,
     status: "Aktif",
     no_telepon: "",
   });
@@ -34,7 +34,6 @@ export function MemberDialog({
   useEffect(() => {
     const fetchNextNo = async () => {
       if (isOpen && !editingMember) {
-        const supabase = createClient();
         const { data, error } = await supabase
           .from("anggota_pemulasaraan")
           .select("no_anggota");
@@ -52,7 +51,7 @@ export function MemberDialog({
             .filter((n) => !isNaN(n));
 
           const maxNum = nums.length > 0 ? Math.max(...nums) : 0;
-          nextNo = `${(maxNum + 1).toString().padStart(3, "0")}/PEM/${year}`;
+          nextNo = `${maxNum + 1}/PEM/${year}`;
         }
 
         setFormData((prev) => ({
@@ -63,9 +62,9 @@ export function MemberDialog({
           jenis_anggota: "Umum",
           tanggal_keanggotaan: new Date().toISOString().split("T")[0],
           alamat: "",
-          rt: 1,
-          rw: 8,
-          pendaftaran: 0,
+          rt: 1 as number | string,
+          rw: 8 as number | string,
+          pendaftaran: "" as number | string,
           status: "Aktif",
           no_telepon: "",
         }));
@@ -99,8 +98,16 @@ export function MemberDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+
+    const submissionData = {
+      ...formData,
+      rt: typeof formData.rt === "string" ? parseInt(formData.rt) || 0 : formData.rt,
+      rw: typeof formData.rw === "string" ? parseInt(formData.rw) || 0 : formData.rw,
+      pendaftaran: typeof formData.pendaftaran === "string" ? parseInt(formData.pendaftaran) || 0 : formData.pendaftaran,
+    };
+
     try {
-      await onSubmit(formData);
+      await onSubmit(submissionData as Omit<FamilyMember, "id">);
       onClose();
     } catch (error) {
       console.error("Error saving member:", error);
@@ -145,7 +152,7 @@ export function MemberDialog({
                 type="text"
                 value={formData.nama_lengkap}
                 onChange={(e) =>
-                  setFormData({ ...formData, nama_lengkap: e.target.value })
+                  setFormData({ ...formData, nama_lengkap: toTitleCase(e.target.value) })
                 }
                 required
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm text-gray-900 bg-white"
@@ -215,7 +222,7 @@ export function MemberDialog({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    rt: parseInt(e.target.value) || 0,
+                    rt: e.target.value === "" ? "" : parseInt(e.target.value) || 0,
                   })
                 }
                 min="1"
@@ -232,7 +239,7 @@ export function MemberDialog({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    rw: parseInt(e.target.value) || 0,
+                    rw: e.target.value === "" ? "" : parseInt(e.target.value) || 0,
                   })
                 }
                 min="1"
@@ -249,7 +256,7 @@ export function MemberDialog({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    pendaftaran: parseInt(e.target.value) || 0,
+                    pendaftaran: e.target.value === "" ? "" : parseInt(e.target.value) || 0,
                   })
                 }
                 min="0"
@@ -325,7 +332,7 @@ export function MemberDialog({
                 "Menyimpan..."
               ) : (
                 <>
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4" />
                   {editingMember ? "Update" : "Simpan"}
                 </>
               )}

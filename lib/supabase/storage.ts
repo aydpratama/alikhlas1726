@@ -1,7 +1,6 @@
-import { createClient } from "./client";
+import { supabase } from "../supabase";
 
 export async function uploadFile(file: File, path: string, bucket: string = "gallery") {
-  const supabase = createClient();
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(path, file, {
@@ -19,7 +18,6 @@ export async function uploadFile(file: File, path: string, bucket: string = "gal
 }
 
 export async function deleteFile(path: string, bucket: string = "gallery") {
-  const supabase = createClient();
   // If path is a full URL, extract the relative path
   const relativePath = path.includes("storage/v1/object/public/") 
     ? path.split(`${bucket}/`)[1] 

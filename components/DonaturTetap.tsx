@@ -338,7 +338,10 @@ function DonaturTetapCard({
   );
 }
 
+import { useAdmin } from "@/hooks/useAdmin";
+
 export function DonaturTetap() {
+  const { canManageDonors } = useAdmin();
   const [donors, setDonors] = useState<Donatur[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -470,6 +473,7 @@ export function DonaturTetap() {
   };
 
   const handleSaveDonor = async (id: number) => {
+    if (!canManageDonors) return;
     setIsSubmitting(true);
     try {
       // 1. Update Nama
@@ -503,6 +507,7 @@ export function DonaturTetap() {
   };
 
   const handleDeleteDonor = async (id: number, name: string) => {
+    if (!canManageDonors) return;
     if (!window.confirm(`Hapus donatur "${name}" dan semua data iurannya?`))
       return;
 
@@ -520,7 +525,7 @@ export function DonaturTetap() {
     }
   };
 
-  const canManageFinance = true; // Temporary open for CRUD without auth
+  const canManageFinance = canManageDonors; // Use RBAC hook instead of hardcoded true
 
   const fetchDonors = async () => {
     setLoading(true);
@@ -673,22 +678,26 @@ export function DonaturTetap() {
           <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
         </div>
 
-        {/* Add Donor Button */}
+        {/* Action Buttons */}
         <div className="flex gap-2 w-full sm:w-auto">
-          <button
-            onClick={exportToPDF}
-            className="flex items-center gap-2 px-6 py-2.5 bg-slate-800 text-white rounded-full text-xs font-bold shadow-md hover:bg-slate-900 transition-all active:scale-95 flex-1 sm:flex-initial justify-center"
-          >
-            <FileText className="w-4 h-4" />
-            EXPORT PDF
-          </button>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-full text-xs font-bold shadow-md hover:bg-emerald-700 transition-all active:scale-95 flex-1 sm:flex-initial justify-center"
-          >
-            <Plus className="w-4 h-4" />
-            TAMBAH
-          </button>
+          {canManageDonors && (
+            <>
+              <button
+                onClick={exportToPDF}
+                className="flex items-center gap-2 px-6 py-2.5 bg-slate-800 text-white rounded-full text-xs font-bold shadow-md hover:bg-slate-900 transition-all active:scale-95 flex-1 sm:flex-initial justify-center"
+              >
+                <FileText className="w-4 h-4" />
+                EXPORT PDF
+              </button>
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-full text-xs font-bold shadow-md hover:bg-emerald-700 transition-all active:scale-95 flex-1 sm:flex-initial justify-center"
+              >
+                <Plus className="w-4 h-4" />
+                TAMBAH
+              </button>
+            </>
+          )}
         </div>
       </div>
 

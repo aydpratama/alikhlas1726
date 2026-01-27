@@ -16,6 +16,7 @@ import {
     Image as ImageIcon
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAdmin } from "@/hooks/useAdmin";
 
 interface FeaturedItem {
     id: number;
@@ -29,9 +30,10 @@ interface SectionCarouselProps {
     icon: React.ElementType;
     table: string;
     mapData: (item: Record<string, unknown>) => FeaturedItem;
+    canEdit?: boolean;
 }
 
-const SectionCarousel: React.FC<SectionCarouselProps> = ({ title, highlight, icon: Icon, table, mapData }) => {
+const SectionCarousel: React.FC<SectionCarouselProps> = ({ title, highlight, icon: Icon, table, mapData, canEdit = false }) => {
     const [items, setItems] = useState<FeaturedItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -191,35 +193,37 @@ const SectionCarousel: React.FC<SectionCarouselProps> = ({ title, highlight, ico
             </div>
 
             {/* CRUD Actions */}
-            <div className="flex items-center justify-center">
-                <div className="flex gap-1">
-                    <button
-                        onClick={openCreate}
-                        title="Tambah Baru"
-                        className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white active:scale-95 transition-all duration-200"
-                    >
-                        <Plus className="w-4 h-4" />
-                    </button>
-                    {items.length > 0 && current && (
-                        <>
-                            <button
-                                onClick={openEdit}
-                                title="Edit Item"
-                                className="w-8 h-8 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center hover:bg-slate-900 hover:text-white active:scale-95 transition-all duration-200"
-                            >
-                                <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                                onClick={() => handleDelete(current.id)}
-                                title="Hapus Item"
-                                className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white active:scale-95 transition-all duration-200"
-                            >
-                                <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                        </>
-                    )}
+            {canEdit && (
+                <div className="flex items-center justify-center">
+                    <div className="flex gap-1">
+                        <button
+                            onClick={openCreate}
+                            title="Tambah Baru"
+                            className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white active:scale-95 transition-all duration-200"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                        {items.length > 0 && current && (
+                            <>
+                                <button
+                                    onClick={openEdit}
+                                    title="Edit Item"
+                                    className="w-8 h-8 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center hover:bg-slate-900 hover:text-white active:scale-95 transition-all duration-200"
+                                >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(current.id)}
+                                    title="Hapus Item"
+                                    className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white active:scale-95 transition-all duration-200"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Carousel Display - CSS Opacity Transition (Super Smooth) */}
             <div
@@ -394,6 +398,8 @@ const SectionCarousel: React.FC<SectionCarouselProps> = ({ title, highlight, ico
 };
 
 export function FeaturedSections() {
+    const { canManageContent } = useAdmin();
+
     return (
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-3 sm:px-6">
             <SectionCarousel
@@ -401,6 +407,7 @@ export function FeaturedSections() {
                 highlight="Rutin"
                 icon={CalendarRange}
                 table="featured_ustadz"
+                canEdit={canManageContent}
                 mapData={(item) => ({
                     id: item.id as number,
                     title: item.nama as string,
@@ -412,6 +419,7 @@ export function FeaturedSections() {
                 highlight="Unggulan"
                 icon={GraduationCap}
                 table="program_unggulan"
+                canEdit={canManageContent}
                 mapData={(item) => ({
                     id: item.id as number,
                     title: item.judul as string,

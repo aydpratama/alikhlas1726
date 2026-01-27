@@ -479,6 +479,12 @@ function ManageModal({
         }
       }
 
+      // Log Activity
+      await logActivity(team ? "UPDATE" : "CREATE", "info_struktur", {
+        team_title: formData.title,
+        team_id: teamId,
+      });
+
       onSave();
       onClose();
     } catch (error: any) {
@@ -537,6 +543,13 @@ function ManageModal({
     try {
       setIsSaving(true);
       await supabase.from("org_teams").delete().eq("id", team.id);
+
+      // Log Activity
+      await logActivity("DELETE", "info_struktur", {
+        team_title: team.title,
+        team_id: team.id,
+      });
+
       onSave();
       onClose();
     } catch (error) {
@@ -812,7 +825,11 @@ function ManageModal({
   );
 }
 
+import { useAdmin } from "@/hooks/useAdmin";
+import { logActivity } from "@/lib/supabase/auth";
+
 export default function InfoPage() {
+  const { canManageInfo, profile, isLoading: authLoading } = useAdmin();
   const [teams, setTeams] = useState<TeamCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [isManageMode, setIsManageMode] = useState(false);
@@ -830,6 +847,13 @@ export default function InfoPage() {
       return;
     }
 
+    // Prioritas: Session-based RBAC
+    if (canManageInfo) {
+      setIsManageMode(true);
+      return;
+    }
+
+    // Fallback: Password-based (Sistem Lama)
     if (isAuthorized) {
       setIsManageMode(true);
       return;

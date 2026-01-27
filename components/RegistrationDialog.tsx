@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase";
 import {
   Users,
   UserPlus,
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/Toast";
+import { toTitleCase } from "@/lib/utils";
 
 interface RegistrationDialogProps {
   isOpen: boolean;
@@ -133,7 +134,6 @@ export function RegistrationDialog({
     }
 
     setIsSubmitting(true);
-    const supabase = createClient();
 
     try {
       const kepalaKeluarga =
@@ -400,7 +400,7 @@ export function RegistrationDialog({
                               value={m.nama_lengkap}
                               onChange={(e) =>
                                 updateMember(idx, {
-                                  nama_lengkap: e.target.value,
+                                  nama_lengkap: toTitleCase(e.target.value),
                                 })
                               }
                               placeholder="Nama Lengkap"

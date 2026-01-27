@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 export function useDues(year: number) {
     const [dues, setDues] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const supabase = createClient();
 
     const refreshDues = async () => {
         setIsLoading(true);
