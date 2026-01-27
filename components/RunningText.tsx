@@ -10,13 +10,13 @@ export function RunningText() {
 
     useEffect(() => {
         const fetchMessages = async () => {
-            const { data } = await supabase
-                .from('running_text')
+            const { data } = await (supabase
+                .from('running_text') as any)
                 .select('konten')
                 .eq('aktif', true);
 
-            if (data && data.length > 0) {
-                setMessages(data.map(m => m.konten));
+            if (data && (data as any[]).length > 0) {
+                setMessages((data as any[]).map(m => m.konten));
             }
             setLoading(false);
         };

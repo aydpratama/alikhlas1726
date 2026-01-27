@@ -17,7 +17,7 @@ export function MemberDialog({
   onSubmit,
   editingMember,
 }: MemberDialogProps) {
-  const [formData, setFormData] = useState<Omit<FamilyMember, "id">>({
+  const [formData, setFormData] = useState<any>({
     no_anggota: "",
     nama_lengkap: "",
     hubungan_keluarga: "Kepala Keluarga",
@@ -34,16 +34,16 @@ export function MemberDialog({
   useEffect(() => {
     const fetchNextNo = async () => {
       if (isOpen && !editingMember) {
-        const { data, error } = await supabase
-          .from("anggota_pemulasaraan")
+        const { data, error } = await (supabase
+          .from("anggota_pemulasaraan") as any)
           .select("no_anggota");
 
         const year = new Date().getFullYear();
         let nextNo = `001/PEM/${year}`;
 
-        if (!error && data && data.length > 0) {
-          const nums = data
-            .map((d) => {
+        if (!error && data && (data as any[]).length > 0) {
+          const nums = (data as any[])
+            .map((d: any) => {
               const basePart = d.no_anggota.split(".")[0];
               const parts = basePart.split("/");
               return parts.length >= 1 ? parseInt(parts[0]) : 0;
@@ -54,7 +54,7 @@ export function MemberDialog({
           nextNo = `${maxNum + 1}/PEM/${year}`;
         }
 
-        setFormData((prev) => ({
+        setFormData((prev: any) => ({
           ...prev,
           no_anggota: nextNo,
           nama_lengkap: "",

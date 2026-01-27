@@ -28,16 +28,16 @@ export async function getAdminProfile(): Promise<AdminProfile | null> {
   if (!user) return null;
 
   // Coba cari berdasarkan auth_id dulu, jika tidak ketemu cari berdasarkan email
-  let { data, error } = await supabase
-    .from('users')
+  let { data, error } = await (supabase
+    .from('users') as any)
     .select('id, auth_id, email, nama_lengkap, peran')
     .eq('auth_id', user.id)
     .maybeSingle();
 
-  if (!data && !error) {
+  if (!data && !error && user.email) {
     // Jika tidak ketemu berdasarkan auth_id, coba cari berdasarkan email
-    const result = await supabase
-      .from('users')
+    const result = await (supabase
+      .from('users') as any)
       .select('id, auth_id, email, nama_lengkap, peran')
       .eq('email', user.email)
       .maybeSingle();
@@ -48,8 +48,8 @@ export async function getAdminProfile(): Promise<AdminProfile | null> {
     // Jika ketemu berdasarkan email tapi auth_id masih kosong, kita bisa update (opsional)
     if (data && !data.auth_id) {
       console.log('Syncing auth_id for user:', user.email);
-      await supabase
-        .from('users')
+      await (supabase
+        .from('users') as any)
         .update({ auth_id: user.id })
         .eq('id', data.id);
     }

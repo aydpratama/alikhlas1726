@@ -13,8 +13,8 @@ export default function FinancialReport() {
       console.log("Fetching latest financial report from database...");
 
       // Ambil data laporan terbaru yang sudah dipublikasikan
-      const { data, error } = await supabase
-        .from("laporan_keuangan")
+      const { data, error } = await (supabase
+        .from("laporan_keuangan") as any)
         .select("url_file_pdf")
         .eq("dipublikasikan", true)
         .order("tahun", { ascending: false })

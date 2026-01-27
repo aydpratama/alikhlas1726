@@ -76,7 +76,7 @@ export function LaporanKeuanganSection() {
   const fetchLaporan = useCallback(async () => {
     setLoading(true);
     try {
-      const query = supabase.from("laporan_keuangan").select("*");
+      const query = (supabase.from("laporan_keuangan") as any).select("*");
 
       if (!canManageFinance) {
         query.eq("dipublikasikan", true);
@@ -148,14 +148,14 @@ export function LaporanKeuanganSection() {
 
       let error;
       if (editingId) {
-        const { error: updateError } = await supabase
-          .from("laporan_keuangan")
+        const { error: updateError } = await (supabase
+          .from("laporan_keuangan") as any)
           .update(payload)
           .eq("id", editingId);
         error = updateError;
       } else {
-        const { error: insertError } = await supabase
-          .from("laporan_keuangan")
+        const { error: insertError } = await (supabase
+          .from("laporan_keuangan") as any)
           .insert([payload]);
         error = insertError;
       }
@@ -177,8 +177,8 @@ export function LaporanKeuanganSection() {
     if (!confirm("Apakah Anda yakin ingin menghapus laporan ini?")) return;
 
     try {
-      const { error } = await supabase
-        .from("laporan_keuangan")
+      const { error } = await (supabase
+        .from("laporan_keuangan") as any)
         .delete()
         .eq("id", id);
 

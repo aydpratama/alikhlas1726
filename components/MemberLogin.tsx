@@ -113,8 +113,8 @@ export function MemberLogin() {
 
         const hashedPassword = await hashPassword(password);
 
-        const { error: insertError } = await supabase
-          .from("member_accounts")
+        const { error: insertError } = await (supabase
+          .from("member_accounts") as any)
           .insert({
             id_anggota: selectedMember.id,
             password: hashedPassword,
@@ -124,8 +124,8 @@ export function MemberLogin() {
         
         setStep("success");
       } else {
-        const { data: account, error: loginError } = await supabase
-          .from("member_accounts")
+        const { data: account, error: loginError } = await (supabase
+          .from("member_accounts") as any)
           .select("*")
           .eq("id_anggota", selectedMember.id)
           .single();
@@ -148,8 +148,8 @@ export function MemberLogin() {
           // If match, auto-upgrade to hashed password
           if (isMatch) {
             const newHashedPassword = await hashPassword(password);
-            await supabase
-              .from("member_accounts")
+            await (supabase
+              .from("member_accounts") as any)
               .update({ password: newHashedPassword })
               .eq("id_anggota", selectedMember.id);
           }

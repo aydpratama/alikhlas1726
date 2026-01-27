@@ -50,8 +50,8 @@ const SectionCarousel: React.FC<SectionCarouselProps> = ({ title, highlight, ico
 
     const fetchData = useCallback(async () => {
         setLoading(true);
-        const { data } = await supabase
-            .from(table)
+        const { data } = await (supabase
+            .from(table) as any)
             .select('*')
             .eq('aktif', true)
             .order('id', { ascending: true });
@@ -129,9 +129,9 @@ const SectionCarousel: React.FC<SectionCarouselProps> = ({ title, highlight, ico
 
         try {
             const res = editMode === 'create'
-                ? await supabase.from(table).insert([payload])
-                : await supabase.from(table).update(payload).eq('id', formData.id);
-
+                ? await (supabase.from(table) as any).insert([payload])
+                : await (supabase.from(table) as any).update(payload).eq('id', formData.id);
+  
             if (res.error) {
                 alert(`Error: ${res.error.message}`);
             } else {
@@ -149,7 +149,7 @@ const SectionCarousel: React.FC<SectionCarouselProps> = ({ title, highlight, ico
 
     const handleDelete = async (id: number) => {
         if (!confirm('Hapus item ini?')) return;
-        const { error } = await supabase.from(table).delete().eq('id', id);
+        const { error } = await (supabase.from(table) as any).delete().eq('id', id);
         if (error) {
             alert(`Gagal menghapus: ${error.message}`);
         } else {

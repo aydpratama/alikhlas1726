@@ -23,7 +23,7 @@ import { supabase } from "@/lib/supabase";
 export function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const pathname = usePathname();
-    const { userEmail, isMember } = useAdmin();
+    const { userEmail, isMember, profile } = useAdmin();
 
     const handleLogout = async () => {
         if (userEmail) {
@@ -35,14 +35,21 @@ export function Header() {
         window.location.href = "/";
     };
 
-    const navigationItems = [
+    const allNavigationItems = [
         { label: "Beranda", icon: Home, href: "/" },
         { label: "Tentang", icon: Info, href: "/tentang" },
         { label: "Galeri", icon: ImageIcon, href: "/galeri" },
         { label: "Pemulasaraan", icon: Heart, href: "/pemulasaraan" },
         { label: "Info", icon: BookOpen, href: "/info" },
-        { label: "Lain-lain", icon: MoreHorizontal, href: "/lain-lain" },
+        { label: "Lain-lain", icon: MoreHorizontal, href: "/lain-lain", protected: true },
     ];
+
+    const navigationItems = allNavigationItems.filter(item => {
+        if (!item.protected) return true;
+        // Only show "Lain-lain" if logged in as super_admin, admin, imam, or marbot
+        const allowedRoles = ['super_admin', 'admin', 'imam', 'marbot'];
+        return profile && allowedRoles.includes(profile.peran);
+    });
 
     const isActive = (href: string) => {
         if (href === "/" && pathname === "/") return true;

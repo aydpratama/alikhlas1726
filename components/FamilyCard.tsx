@@ -158,8 +158,8 @@ export function FamilyCard({
         const monthNumber = index + 1;
         const newValue =
           editingKartu[month.key as keyof typeof editingKartu] || 0;
-
-        const { error } = await supabase.rpc("simpan_pembayaran_iuran", {
+  
+        const { error } = await (supabase as any).rpc("simpan_pembayaran_iuran", {
           p_id_anggota: memberId,
           p_tahun: year,
           p_bulan_ke: monthNumber,

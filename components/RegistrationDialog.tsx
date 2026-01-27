@@ -141,10 +141,10 @@ export function RegistrationDialog({
           ?.nama_lengkap || members[0].nama_lengkap;
 
       const insertPromises = members.map((m) => {
-        const biaya = m.jenis_anggota
+        const pendaftaranBiaya = m.jenis_anggota
           ? JENIS_ANGGOTA_INFO[m.jenis_anggota].biaya
           : 0;
-        return supabase.from("pendaftaran_pemulasaraan").insert({
+        return (supabase.from("pendaftaran_pemulasaraan") as any).insert({
           nama_lengkap: m.nama_lengkap,
           jenis_anggota: m.jenis_anggota,
           hubungan_keluarga: m.hubungan_keluarga,
@@ -154,7 +154,7 @@ export function RegistrationDialog({
           email: familyInfo.email || null,
           no_telepon: familyInfo.no_telepon || null,
           nama_kepala_keluarga: kepalaKeluarga,
-          biaya_pendaftaran: biaya,
+          biaya_pendaftaran: pendaftaranBiaya,
           status: "pending",
         });
       });

@@ -217,8 +217,8 @@ export default function GaleriPage() {
       const dataToSave = { ...formData, url_gambar: imageUrl };
 
       if (editingId) {
-        const { data, error } = await supabase
-          .from("gallery_images")
+        const { data, error } = await (supabase
+          .from("gallery_images") as any)
           .update(dataToSave)
           .eq("id", editingId)
           .select();
@@ -229,8 +229,8 @@ export default function GaleriPage() {
         }
         alert("Gambar berhasil diupdate!");
       } else {
-        const { data, error } = await supabase
-          .from("gallery_images")
+        const { data, error } = await (supabase
+          .from("gallery_images") as any)
           .insert([dataToSave])
           .select();
 
@@ -258,9 +258,9 @@ export default function GaleriPage() {
     if (imageUrl) {
       await deleteFile(imageUrl, "gallery");
     }
-
-    const { error } = await supabase
-      .from("gallery_images")
+  
+    const { error } = await (supabase
+      .from("gallery_images") as any)
       .delete()
       .eq("id", id);
 

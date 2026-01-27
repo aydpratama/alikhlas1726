@@ -102,8 +102,8 @@ export function InfoSections() {
   const fetchData = async () => {
     setLoading(true);
     // Announcements
-    const { data: annData } = await supabase
-      .from("announcements")
+    const { data: annData } = await (supabase
+      .from("announcements") as any)
       .select("*")
       .eq("aktif", true)
       .order("tanggal_pengumuman", { ascending: false })
@@ -111,7 +111,7 @@ export function InfoSections() {
 
     if (annData) {
       setAnnouncements(
-        annData.map((item) => ({
+        (annData as any[]).map((item: any) => ({
           id: item.id,
           title: item.judul,
           date: new Date(item.tanggal_pengumuman).toLocaleDateString("id-ID", {
@@ -127,8 +127,8 @@ export function InfoSections() {
     }
 
     // Finance
-    const { data: finData } = await supabase
-      .from("laporan_keuangan")
+    const { data: finData } = await (supabase
+      .from("laporan_keuangan") as any)
       .select("*")
       .order("tahun", { ascending: false })
       .order("bulan", { ascending: false })
@@ -229,10 +229,10 @@ export function InfoSections() {
     try {
       let res;
       if (annForm.id === 0) {
-        res = await supabase.from("announcements").insert([payload]);
+        res = await (supabase.from("announcements") as any).insert([payload]);
       } else {
-        res = await supabase
-          .from("announcements")
+        res = await (supabase
+          .from("announcements") as any)
           .update(payload)
           .eq("id", annForm.id);
       }
@@ -253,8 +253,8 @@ export function InfoSections() {
 
   const handleAnnDelete = async (id: number) => {
     if (!confirm("Hapus pengumuman ini secara permanen?")) return;
-    const { error } = await supabase
-      .from("announcements")
+    const { error } = await (supabase
+      .from("announcements") as any)
       .delete()
       .eq("id", id);
     if (error) {
@@ -290,10 +290,10 @@ export function InfoSections() {
     try {
       let res;
       if (finForm.id === 0) {
-        res = await supabase.from("laporan_keuangan").insert([payload]);
+        res = await (supabase.from("laporan_keuangan") as any).insert([payload]);
       } else {
-        res = await supabase
-          .from("laporan_keuangan")
+        res = await (supabase
+          .from("laporan_keuangan") as any)
           .update(payload)
           .eq("id", finForm.id);
       }
@@ -314,8 +314,8 @@ export function InfoSections() {
 
   const handleFinDelete = async (id: number) => {
     if (!confirm("Hapus laporan keuangan ini secara permanen?")) return;
-    const { error } = await supabase
-      .from("laporan_keuangan")
+    const { error } = await (supabase
+      .from("laporan_keuangan") as any)
       .delete()
       .eq("id", id);
     if (error) {

@@ -95,8 +95,8 @@ export function WeeklyKajianSchedule() {
     try {
       const res =
         editMode === "create"
-          ? await supabase.from("kajian").insert([payload])
-          : await supabase.from("kajian").update(payload).eq("id", formData.id);
+          ? await (supabase.from("kajian") as any).insert([payload])
+          : await (supabase.from("kajian") as any).update(payload).eq("id", formData.id);
 
       if (res.error) {
         alert(`Gagal: ${res.error.message}`);
@@ -121,7 +121,7 @@ export function WeeklyKajianSchedule() {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Hapus jadwal kajian ini?")) return;
-    const { error } = await supabase.from("kajian").delete().eq("id", id);
+    const { error } = await (supabase.from("kajian") as any).delete().eq("id", id);
     if (error) {
       alert(`Gagal: ${error.message}`);
     } else {

@@ -73,8 +73,8 @@ export function RegistrationApproval({
     setIsLoading(true);
     try {
       // 1. Get the latest membership number for the year
-      const { data: latestMembers, error: fetchError } = await supabase
-        .from("anggota_pemulasaraan")
+      const { data: latestMembers, error: fetchError } = await (supabase
+        .from("anggota_pemulasaraan") as any)
         .select("no_anggota")
         .order("id", { ascending: false })
         .limit(200);
@@ -84,14 +84,14 @@ export function RegistrationApproval({
       let nextNum = 1;
       const yearStr = new Date().getFullYear().toString();
       const yearMembers =
-        latestMembers?.filter((m) =>
+        (latestMembers as any[])?.filter((m: any) =>
           m.no_anggota?.endsWith(`/PEM/${yearStr}`),
         ) || [];
 
       if (yearMembers.length > 0) {
         const numbers = yearMembers
-          .map((m) => parseInt(m.no_anggota.split("/")[0]))
-          .filter((n) => !isNaN(n));
+          .map((m: any) => parseInt(m.no_anggota.split("/")[0]))
+          .filter((n: any) => !isNaN(n));
         if (numbers.length > 0) {
           nextNum = Math.max(...numbers) + 1;
         }
@@ -103,8 +103,8 @@ export function RegistrationApproval({
         const newNoAnggota = `${nextNum}/PEM/${yearStr}`; // Removed suffix
 
         // Insert into anggota_pemulasaraan
-        const { data: newMember, error: insertError } = await supabase
-          .from("anggota_pemulasaraan")
+        const { data: newMember, error: insertError } = await (supabase
+          .from("anggota_pemulasaraan") as any)
           .insert({
             no_anggota: newNoAnggota,
             nama_lengkap: reg.nama_lengkap,
@@ -125,12 +125,12 @@ export function RegistrationApproval({
         if (insertError) throw insertError;
 
         // Update pendaftaran_pemulasaraan status
-        const { error: updateError } = await supabase
-          .from("pendaftaran_pemulasaraan")
+        const { error: updateError } = await (supabase
+          .from("pendaftaran_pemulasaraan") as any)
           .update({
             status: "approved",
             no_anggota_assigned: newNoAnggota,
-            id_anggota_created: newMember.id,
+            id_anggota_created: (newMember as any).id,
             diproses_pada: new Date().toISOString(),
           })
           .eq("id", reg.id);
@@ -157,8 +157,8 @@ export function RegistrationApproval({
     setIsLoading(true);
     try {
       const memberIds = members.map((m) => m.id);
-      const { error } = await supabase
-        .from("pendaftaran_pemulasaraan")
+      const { error } = await (supabase
+        .from("pendaftaran_pemulasaraan") as any)
         .update({
           status: "rejected",
           diproses_pada: new Date().toISOString(),

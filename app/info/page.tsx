@@ -399,14 +399,14 @@ function ManageModal({
 
       // 1. Save Team
       if (teamId) {
-        const { error: teamError } = await supabase
-          .from("org_teams")
+        const { error: teamError } = await (supabase
+          .from("org_teams") as any)
           .update(teamData)
           .eq("id", teamId);
         if (teamError) throw teamError;
       } else {
-        const { data, error: teamError } = await supabase
-          .from("org_teams")
+        const { data, error: teamError } = await (supabase
+          .from("org_teams") as any)
           .insert(teamData)
           .select()
           .single();
@@ -417,16 +417,16 @@ function ManageModal({
       // 2. Save Subsections & Members
       if (teamId) {
         // First, get all subsection IDs for this team to delete members
-        const { data: oldSubsections } = await supabase
-          .from("org_subsections")
+        const { data: oldSubsections } = await (supabase
+          .from("org_subsections") as any)
           .select("id")
           .eq("team_id", teamId);
-
+  
         if (oldSubsections && oldSubsections.length > 0) {
-          const ssIds = oldSubsections.map((s) => s.id);
+          const ssIds = oldSubsections.map((s: any) => s.id);
           // Delete members first to avoid FK constraint issues
-          const { error: mDelError } = await supabase
-            .from("org_members")
+          const { error: mDelError } = await (supabase
+            .from("org_members") as any)
             .delete()
             .in("subsection_id", ssIds);
           if (mDelError) {
@@ -434,10 +434,10 @@ function ManageModal({
             throw mDelError;
           }
         }
-
+  
         // Now delete subsections
-        const { error: ssDelError } = await supabase
-          .from("org_subsections")
+        const { error: ssDelError } = await (supabase
+          .from("org_subsections") as any)
           .delete()
           .eq("team_id", teamId);
 
@@ -448,8 +448,8 @@ function ManageModal({
 
         for (let i = 0; i < (formData.subSections || []).length; i++) {
           const ss = formData.subSections[i];
-          const { data: ssData, error: ssError } = await supabase
-            .from("org_subsections")
+          const { data: ssData, error: ssError } = await (supabase
+            .from("org_subsections") as any)
             .insert({
               team_id: teamId,
               title: ss.title,
@@ -457,9 +457,9 @@ function ManageModal({
             })
             .select()
             .single();
-
+  
           if (ssError) throw ssError;
-
+  
           if (ssData && ss.members?.length > 0) {
             const membersToInsert = ss.members
               .filter((m: any) => m.name.trim() !== "")
@@ -468,10 +468,10 @@ function ManageModal({
                 name: m.name,
                 order_index: mIdx,
               }));
-
+  
             if (membersToInsert.length > 0) {
-              const { error: mError } = await supabase
-                .from("org_members")
+              const { error: mError } = await (supabase
+                .from("org_members") as any)
                 .insert(membersToInsert);
               if (mError) throw mError;
             }
@@ -542,14 +542,18 @@ function ManageModal({
     if (!team?.id || !confirm("Hapus tim ini?")) return;
     try {
       setIsSaving(true);
-      await supabase.from("org_teams").delete().eq("id", team.id);
-
+      await (supabase.from("org_teams") as any).delete().eq("id", team.id);
+  
       // Log Activity
-      await logActivity("DELETE", "info_struktur", {
-        team_title: team.title,
-        team_id: team.id,
+      await (supabase.from("activities") as any).insert({
+        action: "DELETE",
+        module: "info_struktur",
+        details: {
+          team_title: team.title,
+          team_id: team.id,
+        }
       });
-
+  
       onSave();
       onClose();
     } catch (error) {
@@ -871,8 +875,8 @@ export default function InfoPage() {
   async function fetchData() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("org_teams")
+      const { data, error } = await (supabase
+        .from("org_teams") as any)
         .select(
           `
           *,

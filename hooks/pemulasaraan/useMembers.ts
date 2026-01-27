@@ -9,9 +9,9 @@ export function useMembers() {
 
     const refreshMembers = async () => {
         setIsLoading(true);
-        const { data, error } = await supabase.from('anggota_pemulasaraan').select('*').order('no_anggota', { ascending: true });
+        const { data, error } = await (supabase.from('anggota_pemulasaraan') as any).select('*').order('no_anggota', { ascending: true });
         if (!error && data) {
-            setMembers(data);
+            setMembers(data as any[]);
         } else if (error) {
             console.error("Error fetching members:", error);
         }
@@ -23,19 +23,19 @@ export function useMembers() {
     }, []);
 
     const addMember = async (data: any) => {
-        const { error } = await supabase.from('anggota_pemulasaraan').insert(data);
+        const { error } = await (supabase.from('anggota_pemulasaraan') as any).insert(data);
         if (error) throw error;
         await refreshMembers();
     };
 
     const updateMember = async (id: number, data: any) => {
-        const { error } = await supabase.from('anggota_pemulasaraan').update(data).eq('id', id);
+        const { error } = await (supabase.from('anggota_pemulasaraan') as any).update(data).eq('id', id);
         if (error) throw error;
         await refreshMembers();
     };
 
     const deleteMember = async (id: number) => {
-        const { error } = await supabase.from('anggota_pemulasaraan').delete().eq('id', id);
+        const { error } = await (supabase.from('anggota_pemulasaraan') as any).delete().eq('id', id);
         if (error) throw error;
         await refreshMembers();
     };

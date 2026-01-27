@@ -71,14 +71,14 @@ export default function LeaveManagementClient() {
     setIsLoading(true);
     try {
       const [typesRes, requestsRes, balanceRes] = await Promise.all([
-        supabase.from("leave_types").select("*").order("id"),
-        supabase
-          .from("leave_requests")
+        (supabase.from("leave_types") as any).select("*").order("id"),
+        (supabase
+          .from("leave_requests") as any)
           .select("*, leave_types(*)")
           .eq("user_id", MOCK_USER_ID)
           .order("created_at", { ascending: false }),
-        supabase
-          .from("leave_balances")
+        (supabase
+          .from("leave_balances") as any)
           .select("*")
           .eq("user_id", MOCK_USER_ID)
           .eq("year", new Date().getFullYear())
@@ -99,8 +99,8 @@ export default function LeaveManagementClient() {
           used_hours: 0,
           remaining_hours: 576,
         };
-        const { data } = await supabase
-          .from("leave_balances")
+        const { data } = await (supabase
+          .from("leave_balances") as any)
           .insert(newBalance)
           .select()
           .single();
@@ -151,8 +151,8 @@ export default function LeaveManagementClient() {
 
     setIsSubmitting(true);
     try {
-      const { error: submitError } = await supabase
-        .from("leave_requests")
+      const { error: submitError } = await (supabase
+        .from("leave_requests") as any)
         .insert({
           user_id: MOCK_USER_ID,
           leave_type_id: formData.leaveTypeId,

@@ -477,15 +477,15 @@ export function DonaturTetap() {
     setIsSubmitting(true);
     try {
       // 1. Update Nama
-      const { error: nameError } = await supabase
-        .from("donatur_tetap")
+      const { error: nameError } = await (supabase
+        .from("donatur_tetap") as any)
         .update({ nama: editingDonorName.trim() })
         .eq("id", id);
       if (nameError) throw nameError;
-
+  
       // 2. Upsert Iuran
-      const { error: iuranError } = await supabase
-        .from("donatur_tetap_iuran")
+      const { error: iuranError } = await (supabase
+        .from("donatur_tetap_iuran") as any)
         .upsert(
           {
             donatur_id: id,
@@ -512,8 +512,8 @@ export function DonaturTetap() {
       return;
 
     try {
-      const { error } = await supabase
-        .from("donatur_tetap")
+      const { error } = await (supabase
+        .from("donatur_tetap") as any)
         .delete()
         .eq("id", id);
 
@@ -531,8 +531,8 @@ export function DonaturTetap() {
     setLoading(true);
     try {
       console.log("DEBUG: Fetching donors with NEW query structure...");
-      const { data, error } = await supabase
-        .from("donatur_tetap")
+      const { data, error } = await (supabase
+        .from("donatur_tetap") as any)
         .select(
           `
                     id,
@@ -609,18 +609,18 @@ export function DonaturTetap() {
     setIsSubmitting(true);
     try {
       // 1. Insert ke donatur_tetap
-      const { data: donorData, error: donorError } = await supabase
-        .from("donatur_tetap")
+      const { data: donorData, error: donorError } = await (supabase
+        .from("donatur_tetap") as any)
         .insert([{ nama: newDonorName.trim() }])
         .select()
         .single();
-
+  
       if (donorError) throw donorError;
-
+  
       // 2. Inisialisasi iuran untuk tahun berjalan
       const currentYear = new Date().getFullYear();
-      const { error: iuranError } = await supabase
-        .from("donatur_tetap_iuran")
+      const { error: iuranError } = await (supabase
+        .from("donatur_tetap_iuran") as any)
         .insert([
           {
             donatur_id: donorData.id,
