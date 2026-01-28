@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { toTitleCase } from "@/lib/utils";
+import { toTitleCase, getRelationRank } from "@/lib/utils";
 
 interface OthersViewProps {
   isAdmin: boolean;
@@ -83,20 +83,12 @@ export function OthersView({
         // Sort strategy:
         // 1. Urutkan berdasarkan No. Keluarga (bagian depan no_anggota)
         // 2. Jika sama, urutkan berdasarkan Hubungan Keluarga (KK > Istri > Anak)
-        const getRank = (rel: string) => {
-          const r = (rel || "").toLowerCase();
-          if (r.includes("kepala")) return 1;
-          if (r.includes("istri")) return 2;
-          if (r.includes("anak")) return 3;
-          return 4;
-        };
-
         allAccounts.sort((a, b) => {
           const numA = parseInt(a.no_anggota.split('/')[0]) || 0;
           const numB = parseInt(b.no_anggota.split('/')[0]) || 0;
 
           if (numA !== numB) return numA - numB;
-          return getRank(a.hubungan) - getRank(b.hubungan);
+          return getRelationRank(a.hubungan) - getRelationRank(b.hubungan);
         });
 
         if (searchTerm) {

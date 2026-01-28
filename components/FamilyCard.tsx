@@ -17,7 +17,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
 import { useToast } from "@/components/Toast";
-import { toTitleCase } from "@/lib/utils";
+import { toTitleCase, getRelationRank } from "@/lib/utils";
 
 export type FamilyMember = {
   id?: number;
@@ -90,15 +90,6 @@ export function FamilyCard({
   const toast = useToast();
 
   const normalizeRelation = (rel?: string) => (rel || "").trim().toLowerCase();
-  const getRelationRank = (rel?: string) => {
-    const r = normalizeRelation(rel);
-    if (r === "kepala keluarga" || r.includes("kepala")) return 1;
-    if (r === "istri") return 2;
-    if (r === "anak") return 3;
-    if (r === "cucu") return 4;
-    return 99;
-  };
-
   const sortedMembers = [...members].sort((a, b) => {
     const ra = getRelationRank(a.hubungan_keluarga);
     const rb = getRelationRank(b.hubungan_keluarga);

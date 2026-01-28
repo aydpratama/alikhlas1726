@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/Toast";
-import { toTitleCase } from "@/lib/utils";
+import { toTitleCase, getRelationRank } from "@/lib/utils";
 
 interface RegistrationApprovalProps {
   isAdminProp?: boolean;
@@ -46,15 +46,6 @@ export function RegistrationApproval({
       fetchRegistrations();
     }
   }, [isAdminProp]);
-
-  const getRelationRank = (rel?: string) => {
-    const r = (rel || "").trim().toLowerCase();
-    if (r === "kepala keluarga" || r.includes("kepala")) return 1;
-    if (r === "istri") return 2;
-    if (r === "anak") return 3;
-    if (r === "cucu") return 4;
-    return 99;
-  };
 
   const handleApprove = async (membersToApprove: any[]) => {
     const sortedMembersToApprove = [...membersToApprove].sort((a, b) => {

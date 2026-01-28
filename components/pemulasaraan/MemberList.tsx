@@ -17,7 +17,7 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
-import { toTitleCase } from "@/lib/utils";
+import { toTitleCase, getRelationRank } from "@/lib/utils";
 
 interface MemberListViewProps {
   members: Member[];
@@ -122,17 +122,6 @@ export function MemberListView({
       return extractNumber(a.id) - extractNumber(b.id);
     })
     .map((family) => {
-      const normalizeRelation = (rel?: string) =>
-        (rel || "").trim().toLowerCase();
-      const getRelationRank = (rel?: string) => {
-        const r = normalizeRelation(rel);
-        if (r === "kepala keluarga" || r.includes("kepala")) return 1;
-        if (r === "istri") return 2;
-        if (r === "anak") return 3;
-        if (r === "cucu") return 4;
-        return 99;
-      };
-
       return {
         ...family,
         members: [...family.members].sort((a, b) => {

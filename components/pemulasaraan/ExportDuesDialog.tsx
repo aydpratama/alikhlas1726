@@ -14,6 +14,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { Member, KartuBulanan } from "@/types/membership";
+import { getRelationRank } from "@/lib/utils";
 
 interface ExportDuesDialogProps {
   isOpen: boolean;
