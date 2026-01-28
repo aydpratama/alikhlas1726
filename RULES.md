@@ -49,7 +49,7 @@ Jika ada konflik/ambigu → **STOP** dan tanyakan.
 ## 5) MCP / DOCS (WAJIB)
 
 - Gunakan **Context7** untuk verifikasi dependency/konfigurasi yang rawan deprecated.
-- Gunakan **Supabase MCP** untuk schema/RLS/seed bila terkait database.
+- Gunakan **Supabase MCP** untuk schema/RLS/seed bila terkait database. jadi setiap kali ada perintah yang berhubungan dengan database, gunakan **Supabase MCP**.
 - Jika tool tidak tersedia, jelaskan fallback yang aman.
 
 ## 6) OUTPUT FORMAT (WAJIB)

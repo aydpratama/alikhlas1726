@@ -20,6 +20,8 @@ import {
   Loader2,
   Clock,
   FileText,
+  Upload,
+  CheckCircle2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -28,6 +30,7 @@ interface Announcement {
   id: number;
   title: string;
   date: string;
+  rawDate: string;
   description: string;
   image: string;
   gallery: string[];
@@ -98,6 +101,8 @@ export function InfoSections() {
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -119,6 +124,7 @@ export function InfoSections() {
             month: "short",
             year: "numeric",
           }),
+          rawDate: item.tanggal_pengumuman ? item.tanggal_pengumuman.substring(0, 10) : "",
           description: item.konten,
           image: item.url_gambar,
           gallery: item.gallery || [],
@@ -149,14 +155,14 @@ export function InfoSections() {
         url_file_pdf: finData.url_file_pdf,
         createdAt: finData.dibuat_pada
           ? new Date(finData.dibuat_pada)
-              .toLocaleString("id-ID", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-              .replace(",", "")
+            .toLocaleString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+            .replace(",", "")
           : "Baru saja",
       });
     }
@@ -195,6 +201,7 @@ export function InfoSections() {
 
         if (uploadError) {
           console.error("Upload error:", uploadError);
+          alert(`Gagal mengupload ${file.name}: ${uploadError.message}`);
           continue;
         }
 
@@ -211,6 +218,36 @@ export function InfoSections() {
     }
 
     return uploadedUrls;
+  };
+
+  const handlePdfUpload = async (file: File): Promise<string | null> => {
+    setUploadingPdf(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `reports/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("laporan-keuangan")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        alert(`Gagal mengupload ${file.name}: ${uploadError.message}`);
+        return null;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("laporan-keuangan").getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      return null;
+    } finally {
+      setUploadingPdf(false);
+    }
   };
 
   // Announcement Actions
@@ -270,10 +307,16 @@ export function InfoSections() {
     e.preventDefault();
     setSaving(true);
 
-    const finalBalance =
-      Number(finForm.initialBalance) +
-      Number(finForm.income) -
-      Number(finForm.expense);
+    let finalPdfUrl = finForm.url_file_pdf;
+
+    if (pdfFile) {
+      const uploadedUrl = await handlePdfUpload(pdfFile);
+      if (!uploadedUrl) {
+        setSaving(false);
+        return;
+      }
+      finalPdfUrl = uploadedUrl;
+    }
 
     const payload = {
       bulan: finForm.month,
@@ -282,9 +325,13 @@ export function InfoSections() {
       saldo_awal: finForm.initialBalance,
       pemasukan: finForm.income,
       pengeluaran: finForm.expense,
-      saldo_akhir: finalBalance,
-      url_file_pdf: finForm.url_file_pdf,
+      saldo_akhir:
+        Number(finForm.initialBalance) +
+        Number(finForm.income) -
+        Number(finForm.expense),
+      url_file_pdf: finalPdfUrl,
       dipublikasikan: true,
+      diperbarui_pada: new Date().toISOString(),
     };
 
     try {
@@ -304,6 +351,7 @@ export function InfoSections() {
         await fetchData();
         alert("Laporan keuangan berhasil disimpan!");
         setIsFinModalOpen(false);
+        setPdfFile(null);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -458,7 +506,7 @@ export function InfoSections() {
                             id: ann.id,
                             title: ann.title,
                             description: ann.description,
-                            date: "",
+                            date: ann.rawDate || "",
                             gallery: ann.gallery,
                           });
                           setIsAnnModalOpen(true);
@@ -830,11 +878,11 @@ export function InfoSections() {
                     Batal
                   </button>
                   <button
-                    disabled={saving}
+                    disabled={saving || uploadingImages}
                     type="submit"
                     className="flex-1 py-3 bg-emerald-600 text-white text-xs font-bold rounded-full hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
                   >
-                    {saving ? (
+                    {saving || uploadingImages ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
                       <Save className="w-3.5 h-3.5" />
@@ -980,20 +1028,76 @@ export function InfoSections() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase text-slate-400">
-                    URL File PDF Laporan
+                    File PDF Laporan
                   </label>
-                  <input
-                    type="text"
-                    value={finForm.url_file_pdf}
-                    onChange={(e) =>
-                      setFinForm({ ...finForm, url_file_pdf: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-emerald-500"
-                    placeholder="https://jriioagbsjylwxhrzqbn.supabase.co/storage/v1/object/public/laporan-keuangan/..."
-                  />
-                  <p className="text-[9px] text-slate-400">
-                    Masukkan link publik dari Supabase Storage
-                  </p>
+                  <div className="flex flex-col gap-3">
+                    {finForm.url_file_pdf && !pdfFile && (
+                      <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-100 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-emerald-600" />
+                          <span className="text-xs font-medium text-emerald-700 truncate max-w-[150px]">
+                            Laporan Tersimpan
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => window.open(finForm.url_file_pdf!, "_blank")}
+                          className="text-[10px] font-bold text-emerald-600 hover:underline"
+                        >
+                          Lihat PDF
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="relative group">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        id="fin-pdf-upload"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) setPdfFile(file);
+                        }}
+                      />
+                      <label
+                        htmlFor="fin-pdf-upload"
+                        className="flex flex-col items-center justify-center w-full py-6 border-2 border-dashed border-slate-200 rounded-md hover:border-emerald-500 hover:bg-emerald-50/30 cursor-pointer transition-all group"
+                      >
+                        {pdfFile ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                            <span className="text-[11px] font-bold text-emerald-700 text-center px-4 line-clamp-1">
+                              {pdfFile.name}
+                            </span>
+                            <span className="text-[8px] text-slate-400 uppercase font-black">
+                              Klik untuk ganti file
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1">
+                            <Upload className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                            <span className="text-xs font-bold text-slate-600 group-hover:text-emerald-700 transition-colors">
+                              {finForm.url_file_pdf ? "Ganti File PDF" : "Upload File PDF"}
+                            </span>
+                            <span className="text-[8px] text-slate-400 uppercase font-black">
+                              PDF Saja (Max 5MB)
+                            </span>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+
+                    {pdfFile && (
+                      <button
+                        type="button"
+                        onClick={() => setPdfFile(null)}
+                        className="text-[9px] font-black text-rose-500 uppercase hover:text-rose-600 self-center"
+                      >
+                        Batalkan Pilihan
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="bg-emerald-50 p-4 rounded-md border border-emerald-100 mt-4">
@@ -1003,8 +1107,8 @@ export function InfoSections() {
                   <p className="text-xl font-black text-emerald-900">
                     {formatCurrency(
                       Number(finForm.initialBalance) +
-                        Number(finForm.income) -
-                        Number(finForm.expense),
+                      Number(finForm.income) -
+                      Number(finForm.expense),
                     )}
                   </p>
                 </div>
@@ -1018,16 +1122,16 @@ export function InfoSections() {
                     Batal
                   </button>
                   <button
-                    disabled={saving}
+                    disabled={saving || uploadingPdf}
                     type="submit"
                     className="flex-1 py-3 bg-emerald-600 text-white text-xs font-bold rounded-full hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
                   >
-                    {saving ? (
+                    {saving || uploadingPdf ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
                       <Save className="w-3.5 h-3.5" />
                     )}{" "}
-                    Simpan Laporan
+                    {uploadingPdf ? "Mengupload..." : "Simpan Laporan"}
                   </button>
                 </div>
               </form>

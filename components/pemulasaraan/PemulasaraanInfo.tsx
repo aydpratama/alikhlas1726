@@ -130,19 +130,12 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
                 }}
               />
             </div>
-            <p className="text-[10px] font-bold text-slate-500 mb-3 tracking-wider uppercase">
+            <p className="text-[10px] font-bold text-slate-500 mb-1 tracking-wider uppercase">
+              Scan QRIS untuk Pembayaran
+            </p>
+            <p className="text-[9px] font-medium text-slate-400 uppercase">
               Dapat discan dengan E-Wallet & M-Banking
             </p>
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {["GoPay", "OVO", "DANA", "LinkAja", "BCA"].map((app) => (
-                <span
-                  key={app}
-                  className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-full text-[9px] font-bold border border-slate-200"
-                >
-                  {app}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       ),
@@ -550,11 +543,10 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
                 <button
                   key={method.id}
                   onClick={() => setActiveTab(method.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 h-11 sm:h-10 rounded-lg text-xs font-bold transition-all ${
-                    activeTab === method.id
-                      ? "bg-white text-emerald-600 shadow-sm border border-slate-200"
-                      : "text-slate-500 hover:text-slate-900"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 h-11 sm:h-10 rounded-lg text-xs font-bold transition-all ${activeTab === method.id
+                    ? "bg-white text-emerald-600 shadow-sm border border-slate-200"
+                    : "text-slate-500 hover:text-slate-900"
+                    }`}
                 >
                   <method.icon
                     className={`w-4 h-4 ${activeTab === method.id ? "text-emerald-600" : "text-slate-400"}`}

@@ -13,6 +13,8 @@ import {
   Download,
   Loader2,
   Save,
+  Upload,
+  CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -72,6 +74,8 @@ export function LaporanKeuanganSection() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState(initialFormData);
   const [isSaving, setIsSaving] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchLaporan = useCallback(async () => {
     setLoading(true);
@@ -104,6 +108,7 @@ export function LaporanKeuanganSection() {
   const resetForm = () => {
     setEditingId(null);
     setFormData(initialFormData);
+    setPdfFile(null);
   };
 
   const openAddDialog = () => {
@@ -124,6 +129,7 @@ export function LaporanKeuanganSection() {
       url_file_pdf: item.url_file_pdf || "",
       dipublikasikan: item.dipublikasikan,
     });
+    setPdfFile(null);
     setIsDialogOpen(true);
   };
 
@@ -141,9 +147,31 @@ export function LaporanKeuanganSection() {
     setIsSaving(true);
 
     try {
+      let finalUrl = formData.url_file_pdf;
+
+      if (pdfFile) {
+        setIsUploading(true);
+        const fileExt = pdfFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `reports/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("laporan-keuangan")
+          .upload(filePath, pdfFile);
+
+        if (uploadError) throw uploadError;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("laporan-keuangan").getPublicUrl(filePath);
+
+        finalUrl = publicUrl;
+      }
+
       const payload = {
         ...formData,
-        updated_at: new Date().toISOString(),
+        url_file_pdf: finalUrl,
+        diperbarui_pada: new Date().toISOString(),
       };
 
       let error;
@@ -170,6 +198,7 @@ export function LaporanKeuanganSection() {
       alert("❌ Gagal menyimpan: " + message);
     } finally {
       setIsSaving(false);
+      setIsUploading(false);
     }
   };
 
@@ -472,20 +501,80 @@ export function LaporanKeuanganSection() {
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase text-slate-400">
-                      URL PDF Laporan
+                      File PDF Laporan
                     </label>
-                    <input
-                      type="text"
-                      value={formData.url_file_pdf}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          url_file_pdf: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
-                      placeholder="https://..."
-                    />
+                    <div className="flex flex-col gap-3">
+                      {formData.url_file_pdf && !pdfFile && (
+                        <div className="flex items-center justify-between p-3 bg-teal-50 border border-teal-100 rounded-xl">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-teal-600" />
+                            <span className="text-xs font-medium text-teal-700 truncate max-w-[200px]">
+                              File Tersimpan
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => window.open(formData.url_file_pdf!, "_blank")}
+                            className="text-[10px] font-bold text-teal-600 hover:underline"
+                          >
+                            Lihat File
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="relative group">
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          id="pdf-upload"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setPdfFile(file);
+                          }}
+                        />
+                        <label
+                          htmlFor="pdf-upload"
+                          className="flex flex-col items-center justify-center w-full py-8 border-2 border-dashed border-slate-200 rounded-2xl hover:border-teal-500 hover:bg-teal-50/50 cursor-pointer transition-all group"
+                        >
+                          {pdfFile ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="p-3 bg-teal-100 rounded-full text-teal-600">
+                                <CheckCircle2 className="w-6 h-6" />
+                              </div>
+                              <span className="text-sm font-bold text-teal-700">
+                                {pdfFile.name}
+                              </span>
+                              <span className="text-[10px] text-slate-400 uppercase font-black">
+                                Klik untuk ganti file
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="p-3 bg-slate-100 rounded-full text-slate-400 group-hover:bg-teal-100 group-hover:text-teal-600 transition-colors">
+                                <Upload className="w-6 h-6" />
+                              </div>
+                              <span className="text-sm font-bold text-slate-600 group-hover:text-teal-700">
+                                {formData.url_file_pdf ? "Ganti File PDF" : "Upload File PDF"}
+                              </span>
+                              <span className="text-[10px] text-slate-400 uppercase font-black">
+                                Maksimal 5MB (PDF saja)
+                              </span>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+
+                      {pdfFile && (
+                        <button
+                          type="button"
+                          onClick={() => setPdfFile(null)}
+                          className="text-[10px] font-black text-rose-500 uppercase hover:text-rose-600 self-center"
+                        >
+                          Hapus Pilihan
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 pt-4">
@@ -501,12 +590,17 @@ export function LaporanKeuanganSection() {
                       disabled={isSaving}
                       className="flex-1 py-4 bg-teal-600 text-white text-sm font-bold rounded-2xl hover:bg-teal-700 shadow-lg shadow-teal-100 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                      {isSaving ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                      {isSaving || isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {isUploading ? "UPLOADING..." : "MENYIMPAN..."}
+                        </>
                       ) : (
-                        <Save className="w-4 h-4" />
+                        <>
+                          <Save className="w-4 h-4" />
+                          SIMPAN DATA
+                        </>
                       )}
-                      SIMPAN DATA
                     </button>
                   </div>
                 </form>

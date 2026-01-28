@@ -12,8 +12,10 @@ import {
   Users,
   UserPlus,
   FileText,
+  FileDown,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import * as XLSX from "xlsx";
 import { useToast } from "@/components/Toast";
 import { toTitleCase } from "@/lib/utils";
 
@@ -87,20 +89,6 @@ export function FamilyCard({
   const [isSaving, setIsSaving] = useState(false);
   const toast = useToast();
 
-  // Use first member (kepala keluarga) if keluarga prop not provided
-  const familyData =
-    keluarga ||
-    (members[0]
-      ? {
-          no_anggota: members[0].no_anggota.split(".")[0],
-          alamat: members[0].alamat || "",
-          rt: members[0].rt || 0,
-          rw: members[0].rw || 0,
-        }
-      : null);
-
-  if (!familyData) return null;
-
   const normalizeRelation = (rel?: string) => (rel || "").trim().toLowerCase();
   const getRelationRank = (rel?: string) => {
     const r = normalizeRelation(rel);
@@ -117,6 +105,20 @@ export function FamilyCard({
     if (ra !== rb) return ra - rb;
     return (a.nama_lengkap || "").localeCompare(b.nama_lengkap || "", "id-ID");
   });
+
+  // Use first member (kepala keluarga) if keluarga prop not provided
+  const familyData =
+    keluarga ||
+    (sortedMembers[0]
+      ? {
+        no_anggota: sortedMembers[0].no_anggota.split(".")[0],
+        alamat: sortedMembers[0].alamat || "",
+        rt: sortedMembers[0].rt || 0,
+        rw: sortedMembers[0].rw || 0,
+      }
+      : null);
+
+  if (!familyData) return null;
 
   // Start editing iuran for a member
   const startEditingIuran = (
@@ -158,7 +160,7 @@ export function FamilyCard({
         const monthNumber = index + 1;
         const newValue =
           editingKartu[month.key as keyof typeof editingKartu] || 0;
-  
+
         const { error } = await (supabase as any).rpc("simpan_pembayaran_iuran", {
           p_id_anggota: memberId,
           p_tahun: year,
@@ -248,14 +250,13 @@ export function FamilyCard({
     return raw == null || s === "" ? "-" : String(raw);
   };
 
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     try {
       const year =
         selectedYear ||
         (kartuList && kartuList[0] && kartuList[0].tahun) ||
         new Date().getFullYear();
 
-      // English month labels to match the Excel example
       const MONTH_LABELS_EN = [
         "January",
         "February",
@@ -271,39 +272,25 @@ export function FamilyCard({
         "December",
       ];
 
-      // Determine Kepala Keluarga name (first member or first with hubungan_keluarga Kepala Keluarga)
       const kepalaKeluarga =
         members.find((m) =>
           m.hubungan_keluarga?.toLowerCase().includes("kepala"),
         ) || members[0];
 
-      // Base columns: No, Nama, Pendaftaran, 12 months
-      const baseHeaders = ["No", "Nama", "Pendaftaran", ...MONTH_LABELS_EN];
-
-      const maxColumns = baseHeaders.length; // 3 + 12 = 15
-
-      const padRow = (cols: (string | number)[]): (string | number)[] => {
-        const row = [...cols];
-        while (row.length < maxColumns) {
-          row.push("");
-        }
-        return row;
-      };
-
-      // Header / meta rows (title, tahun, info keluarga)
-      const metaRows: (string | number)[][] = [
-        padRow(["KARTU IURAN PEMULASARAAN AL IKHLAS"]),
-        padRow([`TAHUN : ${year}`]),
-        padRow(["NO Anggota", "", familyData.no_anggota]),
-        padRow([
-          "Nama Kepala Keluarga",
-          "",
-          kepalaKeluarga?.nama_lengkap || "",
-        ]),
-        padRow(["Alamat", "", familyData.alamat || ""]),
+      // 1. Prepare Meta Data (Headers)
+      const metaRows = [
+        ["KARTU IURAN PEMULASARAAN AL IKHLAS"],
+        ["TAHUN :", year],
+        ["NO Anggota :", familyData.no_anggota],
+        ["Nama Kepala Keluarga :", kepalaKeluarga?.nama_lengkap || ""],
+        ["Alamat :", familyData.alamat || ""],
+        [], // empty row for spacing
       ];
 
-      // Tentukan jenis anggota dalam keluarga
+      // 2. Table Headers
+      const tableHeaders = ["No", "Nama", "Pendaftaran", ...MONTH_LABELS_EN];
+
+      // 3. Member Data
       const hasUmum = members.some(
         (m) => m.jenis_anggota?.trim().toLowerCase() === "umum",
       );
@@ -312,63 +299,35 @@ export function FamilyCard({
         return t === "tetap" || t === "tetap tambahan";
       });
 
-      // Jika hanya ada Umum -> export Umum saja (seperti sebelumnya)
-      // Jika hanya ada Tetap/Tetap Tambahan -> export mereka tanpa isi iuran bulanan
-      // Jika campuran -> export semua anggota
-      const targetMembers = members.filter((m) => {
+      const targetMembers = sortedMembers.filter((m) => {
         const t = m.jenis_anggota?.trim().toLowerCase();
-        if (hasUmum && !hasTetapLike) {
-          return t === "umum";
-        }
-        if (!hasUmum && hasTetapLike) {
-          return t === "tetap" || t === "tetap tambahan";
-        }
-        // campuran: tampilkan semua anggota
+        if (hasUmum && !hasTetapLike) return t === "umum";
+        if (!hasUmum && hasTetapLike) return t === "tetap" || t === "tetap tambahan";
         return true;
       });
 
       const memberRows = targetMembers.map((m, index) => {
         const jenis = m.jenis_anggota?.trim().toLowerCase();
         const isUmumMember = jenis === "umum";
-
         const kartu = isUmumMember
           ? kartuList.find((k) => k.id_anggota === (m.id ?? -1))
           : undefined;
 
-        // Untuk anggota Umum: isi kolom bulan dengan nominal iuran
-        // Untuk Tetap/Tetap Tambahan: kolom bulan dikosongkan
         const monthValues = MONTHS.map(({ key }) => {
           if (!isUmumMember || !kartu) return "";
-          const raw = kartu[key];
-          const nominal = Number(raw) || 0;
+          const nominal = Number(kartu[key]) || 0;
           return nominal === 0 ? "" : nominal;
         });
 
-        const row: (string | number)[] = [
+        return [
           index + 1,
           m.nama_lengkap,
-          m.pendaftaran ? m.pendaftaran.toLocaleString("id-ID") : 0,
+          m.pendaftaran || 0,
           ...monthValues,
         ];
-
-        return padRow(row);
       });
 
-      if (memberRows.length === 0) {
-        // Tetap buat file dengan header, tapi tanpa data anggota
-        memberRows.push(padRow([]));
-      }
-
-      // Pad table with extra empty rows so Excel terlihat seperti kartu contoh
-      const TARGET_DATA_ROWS = 13; // sesuai contoh: beberapa baris kosong setelah data
-      while (memberRows.length < TARGET_DATA_ROWS) {
-        memberRows.push(padRow([]));
-      }
-
-      // Footer rows: Note + ttd
-      const makeEmptyRow = (): (string | number)[] =>
-        Array.from({ length: maxColumns }, () => "");
-
+      // 4. Footer Data
       const today = new Date();
       const formattedDate = new Intl.DateTimeFormat("id-ID", {
         day: "2-digit",
@@ -376,54 +335,32 @@ export function FamilyCard({
         year: "numeric",
       }).format(today);
 
-      const bekasiRow = makeEmptyRow();
-      bekasiRow[10] = `Bekasi, ${formattedDate}`;
-
-      const koordinatorRow = makeEmptyRow();
-      koordinatorRow[10] = "Koordinator Bidang Pemulasaraan";
-
-      const kamisoRow = makeEmptyRow();
-      kamisoRow[10] = "Kamiso";
-
-      const allRows: (string | number)[][] = [
-        ...metaRows,
-        padRow(baseHeaders),
-        ...memberRows,
-        makeEmptyRow(),
-        padRow(["Note"]),
-        makeEmptyRow(),
-        bekasiRow,
-        koordinatorRow,
-        makeEmptyRow(),
-        kamisoRow,
+      const footerRows = [
+        [], // spacing
+        ["Note"],
+        [], // spacing
+        ["", "", "", "", "", "", "", "", "", "", `Bekasi, ${formattedDate}`],
+        ["", "", "", "", "", "", "", "", "", "", "Koordinator Bidang Pemulasaraan"],
+        [], // spacing
+        [], // spacing
+        ["", "", "", "", "", "", "", "", "", "", "Kamiso"],
       ];
 
-      const csvContent = allRows
-        .map((cols) =>
-          cols
-            .map((v) => {
-              const s = typeof v === "number" ? String(v) : String(v ?? "");
-              if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-              return s;
-            })
-            .join(";"),
-        )
-        .join("\n");
+      // 5. Create Workbook & Sheet
+      const worksheet = XLSX.utils.aoa_to_sheet([
+        ...metaRows,
+        tableHeaders,
+        ...memberRows,
+        ...footerRows
+      ]);
 
-      // Tambahkan BOM UTF-8 agar lebih kompatibel di Excel/WPS/mobile
-      const blob = new Blob(["\ufeff" + csvContent], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Kartu_Iuran_${familyData.no_anggota}_${year}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Kartu Iuran");
+
+      // 6. Save File
+      XLSX.writeFile(workbook, `Kartu_Iuran_${familyData.no_anggota}_${year}.xlsx`);
     } catch (e) {
-      console.error("Error exporting CSV:", e);
+      console.error("Error exporting Excel:", e);
     }
   };
 
@@ -489,23 +426,19 @@ export function FamilyCard({
           })
             .map(
               (v) =>
-                `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${
-                  v || ""
+                `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${v || ""
                 }</td>`,
             )
             .join("");
 
           return `
             <tr>
-              <td style="padding:6px;border:1px solid #ddd;text-align:center;">${
-                index + 1
-              }</td>
-              <td style="padding:6px;border:1px solid #ddd;">${
-                m.nama_lengkap
-              }</td>
-              <td style="padding:6px;border:1px solid #ddd;text-align:right;">${
-                m.pendaftaran ? m.pendaftaran.toLocaleString("id-ID") : "0"
-              }</td>
+              <td style="padding:6px;border:1px solid #ddd;text-align:center;">${index + 1
+            }</td>
+              <td style="padding:6px;border:1px solid #ddd;">${m.nama_lengkap
+            }</td>
+              <td style="padding:6px;border:1px solid #ddd;text-align:right;">${m.pendaftaran ? m.pendaftaran.toLocaleString("id-ID") : "0"
+            }</td>
               ${monthCells}
             </tr>
           `;
@@ -518,11 +451,11 @@ export function FamilyCard({
           <th style="padding:6px;border:1px solid #ddd;">Nama</th>
           <th style="padding:6px;border:1px solid #ddd;">Pendaftaran</th>
           ${monthLabels
-            .map(
-              (ml) =>
-                `<th style="padding:6px;border:1px solid #ddd;text-align:center;">${ml}</th>`,
-            )
-            .join("")}
+          .map(
+            (ml) =>
+              `<th style="padding:6px;border:1px solid #ddd;text-align:center;">${ml}</th>`,
+          )
+          .join("")}
         </tr>
       `;
 
@@ -662,11 +595,11 @@ export function FamilyCard({
             {isAdmin ? (
               <div className="flex items-center bg-white shadow-sm border border-slate-200 rounded-lg p-0.5 overflow-hidden">
                 <button
-                  onClick={handleExportCSV}
+                  onClick={handleExportExcel}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
                 >
-                  <FileText className="w-3.5 h-3.5" />
-                  CSV
+                  <FileDown className="w-3.5 h-3.5" />
+                  Excel
                 </button>
                 <div className="w-[1px] h-4 bg-slate-200" />
                 <button
@@ -861,11 +794,10 @@ export function FamilyCard({
                                     Number(e.target.value) || 0,
                                   )
                                 }
-                                className={`w-full px-2 py-1.5 text-xs text-center border-2 rounded transition-all focus:outline-none text-gray-900 ${
-                                  isPaid
-                                    ? "border-emerald-400 bg-emerald-50"
-                                    : "border-slate-200 bg-white"
-                                }`}
+                                className={`w-full px-2 py-1.5 text-xs text-center border-2 rounded transition-all focus:outline-none text-gray-900 ${isPaid
+                                  ? "border-emerald-400 bg-emerald-50"
+                                  : "border-slate-200 bg-white"
+                                  }`}
                               />
                               <button
                                 type="button"
@@ -875,11 +807,10 @@ export function FamilyCard({
                                     value > 0 ? 0 : 5000,
                                   )
                                 }
-                                className={`w-full px-1 py-0.5 text-[10px] rounded ${
-                                  isPaid
-                                    ? "bg-rose-100 text-rose-600 hover:bg-rose-200"
-                                    : "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
-                                }`}
+                                className={`w-full px-1 py-0.5 text-[10px] rounded ${isPaid
+                                  ? "bg-rose-100 text-rose-600 hover:bg-rose-200"
+                                  : "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
+                                  }`}
                               >
                                 {isPaid ? "Hapus" : "5.000"}
                               </button>
@@ -935,17 +866,15 @@ export function FamilyCard({
                               return (
                                 <div
                                   key={month.key}
-                                  className={`relative rounded-lg p-2.5 transition-all ${
-                                    isPaid ? "bg-teal-50" : "bg-rose-50"
-                                  }`}
+                                  className={`relative rounded-lg p-2.5 transition-all ${isPaid ? "bg-teal-50" : "bg-rose-50"
+                                    }`}
                                 >
                                   <div className="text-center">
                                     <span
-                                      className={`text-xs font-medium block mb-0.5 ${
-                                        isPaid
-                                          ? "text-teal-700"
-                                          : "text-rose-700"
-                                      }`}
+                                      className={`text-xs font-medium block mb-0.5 ${isPaid
+                                        ? "text-teal-700"
+                                        : "text-rose-700"
+                                        }`}
                                     >
                                       {month.label}
                                     </span>
@@ -957,17 +886,17 @@ export function FamilyCard({
                                         {kartu[
                                           month.dateKey as keyof typeof kartu
                                         ] && (
-                                          <span className="text-[9px] text-teal-500 block mt-0.5">
-                                            {new Date(
-                                              kartu[
+                                            <span className="text-[9px] text-teal-500 block mt-0.5">
+                                              {new Date(
+                                                kartu[
                                                 month.dateKey as keyof typeof kartu
-                                              ] as string,
-                                            ).toLocaleDateString("id-ID", {
-                                              day: "2-digit",
-                                              month: "2-digit",
-                                            })}
-                                          </span>
-                                        )}
+                                                ] as string,
+                                              ).toLocaleDateString("id-ID", {
+                                                day: "2-digit",
+                                                month: "2-digit",
+                                              })}
+                                            </span>
+                                          )}
                                       </>
                                     ) : (
                                       <span className="text-xs text-rose-500 block">

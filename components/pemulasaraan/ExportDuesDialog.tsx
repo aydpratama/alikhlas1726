@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown, Loader2, Filter } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { Member, KartuBulanan } from "@/types/membership";
 
 interface ExportDuesDialogProps {
@@ -258,13 +259,118 @@ export function ExportDuesDialog({
     }
   };
 
+  const handleExportExcel = () => {
+    setIsExporting(true);
+    try {
+      const months = [
+        { key: "bulan_januari", label: "January" },
+        { key: "bulan_februari", label: "February" },
+        { key: "bulan_maret", label: "March" },
+        { key: "bulan_april", label: "April" },
+        { key: "bulan_mei", label: "May" },
+        { key: "bulan_juni", label: "June" },
+        { key: "bulan_juli", label: "July" },
+        { key: "bulan_agustus", label: "August" },
+        { key: "bulan_september", label: "September" },
+        { key: "bulan_oktober", label: "October" },
+        { key: "bulan_november", label: "November" },
+        { key: "bulan_desember", label: "December" },
+      ];
+
+      // 1. Prepare Header Info
+      const filterText = [
+        activeFilters?.searchTerm ? `Cari: "${activeFilters.searchTerm}"` : null,
+        activeFilters?.jenisAnggota ? `Jenis: ${activeFilters.jenisAnggota}` : null,
+        activeFilters?.rt ? `RT: ${activeFilters.rt}` : null,
+        activeFilters?.rw ? `RW: ${activeFilters.rw}` : null,
+      ].filter(Boolean).join(" | ");
+
+      const headerData = [
+        ["DAFTAR ANGGOTA PEMULASARAAN AL-IKHLAS"],
+        [`Tahun ${yearFilter}`],
+        [filterText ? `Filter: ${filterText}` : ""],
+        [], // spacing
+      ];
+
+      // 2. Prepare Table Headers
+      const tableHeaders = [
+        "No",
+        "No Anggota",
+        "Nama Anggota",
+        "Hub. Kel",
+        "Jenis",
+        "Tgl Keanggotaan",
+        "Alamat",
+        "Biaya Daftar",
+        ...months.map((m) => m.label),
+      ];
+
+      // 3. Sort & Prepare Member Data Rows
+      const sortedMembers = [...members].sort((a, b) => {
+        const extractNumber = (noAnggota: string) => {
+          const match = noAnggota.match(/^(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        };
+        const numA = extractNumber(a.no_anggota);
+        const numB = extractNumber(b.no_anggota);
+
+        if (numA !== numB) {
+          return numA - numB;
+        }
+
+        return (
+          getRelationRank(a.hubungan_keluarga) -
+          getRelationRank(b.hubungan_keluarga)
+        );
+      });
+
+      const rows = sortedMembers.map((member, index) => {
+        const memberDues = getDuesForMember(member.id!, yearFilter);
+        const monthPayments = months.map((month) => {
+          const value = memberDues?.[month.key as keyof KartuBulanan];
+          return value && Number(value) > 0 ? Number(value) : 0;
+        });
+
+        return [
+          index + 1,
+          member.no_anggota,
+          member.nama_lengkap,
+          member.hubungan_keluarga,
+          member.jenis_anggota,
+          member.tanggal_keanggotaan,
+          `${member.alamat} RT ${member.rt} / RW ${member.rw}`,
+          member.pendaftaran || 0,
+          ...monthPayments,
+        ];
+      });
+
+      // 4. Combine all into sheet
+      const worksheet = XLSX.utils.aoa_to_sheet([...headerData, tableHeaders, ...rows]);
+
+      // 5. Apply some basic styles (merging header if possible in simple ways, though aoa_to_sheet is basic)
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Anggota Pemulasaraan");
+
+      // 6. Generate filename and save
+      const fileName = `Anggota_Pemulasaraan_${yearFilter}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      onClose();
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      alert("Gagal mengekspor Excel.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileDown className="w-5 h-5 text-emerald-600" />
-            Export Kartu Iuran PDF
+            Export Data Anggota & Iuran
           </DialogTitle>
         </DialogHeader>
 
@@ -333,32 +439,41 @@ export function ExportDuesDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
             onClick={onClose}
             disabled={isExporting}
-            className="h-11 sm:h-10"
+            className="h-11 sm:h-10 w-full sm:w-auto"
           >
             Batal
           </Button>
-          <Button
-            onClick={handleExport}
-            disabled={isExporting || members.length === 0}
-            className="h-11 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold min-w-[140px]"
-          >
-            {isExporting ? (
-              <>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={handleExportExcel}
+              disabled={isExporting || members.length === 0}
+              className="h-11 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold w-full sm:w-auto"
+            >
+              {isExporting ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Mengekspor...
-              </>
-            ) : (
-              <>
+              ) : (
                 <FileDown className="w-4 h-4 mr-2" />
-                Export PDF
-              </>
-            )}
-          </Button>
+              )}
+              Export Excel
+            </Button>
+            <Button
+              onClick={handleExport}
+              disabled={isExporting || members.length === 0}
+              className="h-11 sm:h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold w-full sm:w-auto"
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4 mr-2" />
+              )}
+              Export PDF
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

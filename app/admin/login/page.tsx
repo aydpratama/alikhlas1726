@@ -9,7 +9,7 @@ import Link from "next/link";
 import { MemberLogin } from "@/components/MemberLogin";
 
 export default function LoginPage() {
-  const [loginType, setLoginType] = useState<"admin" | "member">("admin");
+  const [loginType, setLoginType] = useState<"admin" | "member">("member");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,22 +52,20 @@ export default function LoginPage() {
         <div className="flex border-b border-slate-100">
           <button
             onClick={() => setLoginType("admin")}
-            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-              loginType === "admin"
+            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${loginType === "admin"
                 ? "text-emerald-700 bg-emerald-50/50 border-b-2 border-emerald-600"
                 : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
-            }`}
+              }`}
           >
             <Shield className="w-4 h-4" />
             Admin
           </button>
           <button
             onClick={() => setLoginType("member")}
-            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-              loginType === "member"
+            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${loginType === "member"
                 ? "text-emerald-700 bg-emerald-50/50 border-b-2 border-emerald-600"
                 : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
-            }`}
+              }`}
           >
             <User className="w-4 h-4" />
             Anggota
@@ -82,8 +80,8 @@ export default function LoginPage() {
             {loginType === "admin" ? "Admin Al-Ikhlas" : "Portal Anggota"}
           </h1>
           <p className="text-slate-500 mt-2">
-            {loginType === "admin" 
-              ? "Masuk untuk mengelola konten dan sistem" 
+            {loginType === "admin"
+              ? "Masuk untuk mengelola konten dan sistem"
               : "Masuk untuk melihat kartu digital & iuran"}
           </p>
         </div>
@@ -147,8 +145,8 @@ export default function LoginPage() {
 
         <div className="p-6 bg-slate-50 border-t border-slate-200 text-center">
           <p className="text-xs text-slate-400 font-medium leading-relaxed">
-            {loginType === "admin" 
-              ? "Halaman ini khusus untuk pengurus DKM Masjid Al-Ikhlas." 
+            {loginType === "admin"
+              ? "Halaman ini khusus untuk pengurus DKM Masjid Al-Ikhlas."
               : "Gunakan data yang terdaftar pada sistem Pemulasaraan."}
             <br />
             Akses dicatat dan diaudit secara berkala.

@@ -166,7 +166,7 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
                 </p>
               </div>
               <Image
-                src="/qrisalikhlas.jpg"
+                src="/QRIS_Alikhlas.jpg"
                 alt="QR Code Donasi"
                 fill
                 className="object-contain"
@@ -175,21 +175,12 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
                 }}
               />
             </div>
-            <p className="text-[10px] font-bold text-slate-500 mb-4 tracking-wider uppercase">
+            <p className="text-[10px] font-bold text-slate-500 mb-1 tracking-wider uppercase">
+              Scan QRIS untuk Berdonasi
+            </p>
+            <p className="text-[9px] font-medium text-slate-400 uppercase">
               Dapat discan dengan E-Wallet & M-Banking
             </p>
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {["GoPay", "OVO", "DANA", "ShopeePay", "LinkAja", "BCA"].map(
-                (app) => (
-                  <span
-                    key={app}
-                    className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-full text-[9px] font-bold border border-slate-200"
-                  >
-                    {app}
-                  </span>
-                ),
-              )}
-            </div>
           </div>
           <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex gap-3">
             <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -295,11 +286,10 @@ export function DonationSection({ className = "" }: DonationSectionProps) {
             <button
               key={method.id}
               onClick={() => setActiveMethod(method.id)}
-              className={`flex-1 flex items-center justify-center gap-2 h-11 sm:h-10 rounded-lg text-xs font-bold transition-all ${
-                activeMethod === method.id
-                  ? "bg-white text-emerald-600 shadow-sm border border-slate-200"
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 h-11 sm:h-10 rounded-lg text-xs font-bold transition-all ${activeMethod === method.id
+                ? "bg-white text-emerald-600 shadow-sm border border-slate-200"
+                : "text-slate-500 hover:text-slate-900"
+                }`}
             >
               <method.icon
                 className={`w-4 h-4 ${activeMethod === method.id ? "text-emerald-600" : "text-slate-400"}`}

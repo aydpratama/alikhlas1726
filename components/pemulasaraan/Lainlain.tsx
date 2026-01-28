@@ -45,55 +45,102 @@ export function OthersView({
     const fetchMembers = async () => {
       setLoading(true);
 
-      // Fetch members joined with their accounts
-      let query = supabase
-        .from("anggota_pemulasaraan")
-        .select(
-          `
-                    id, no_anggota, nama_lengkap, rt, rw,
-                    member_accounts(id_anggota, password)
-                `,
-        )
-        .eq("hubungan_keluarga", "Kepala Keluarga")
-        .not("member_accounts", "is", null);
+      try {
+        // 1. Dapatkan semua akun yang ada di member_accounts dengan relasi ke anggota_pemulasaraan
+        const { data: accounts, error: accountError } = await supabase
+          .from("member_accounts")
+          .select(`
+            id_anggota,
+            anggota_pemulasaraan (
+              id,
+              no_anggota,
+              nama_lengkap,
+              rt,
+              rw,
+              hubungan_keluarga
+            )
+          `);
 
-      if (searchTerm) {
-        query = query.ilike("nama_lengkap", `%${searchTerm}%`);
+        if (accountError) throw accountError;
+
+        if (!accounts || accounts.length === 0) {
+          setMembers([]);
+          setLoading(false);
+          return;
+        }
+
+        // Transform data agar mudah dibaca di UI
+        let allAccounts = accounts.map((a: any) => ({
+          account_id_anggota: a.id_anggota,
+          id: a.anggota_pemulasaraan.id,
+          no_anggota: a.anggota_pemulasaraan.no_anggota,
+          nama_lengkap: a.anggota_pemulasaraan.nama_lengkap,
+          rt: a.anggota_pemulasaraan.rt,
+          rw: a.anggota_pemulasaraan.rw,
+          hubungan: a.anggota_pemulasaraan.hubungan_keluarga
+        }));
+
+        // Sort strategy:
+        // 1. Urutkan berdasarkan No. Keluarga (bagian depan no_anggota)
+        // 2. Jika sama, urutkan berdasarkan Hubungan Keluarga (KK > Istri > Anak)
+        const getRank = (rel: string) => {
+          const r = (rel || "").toLowerCase();
+          if (r.includes("kepala")) return 1;
+          if (r.includes("istri")) return 2;
+          if (r.includes("anak")) return 3;
+          return 4;
+        };
+
+        allAccounts.sort((a, b) => {
+          const numA = parseInt(a.no_anggota.split('/')[0]) || 0;
+          const numB = parseInt(b.no_anggota.split('/')[0]) || 0;
+
+          if (numA !== numB) return numA - numB;
+          return getRank(a.hubungan) - getRank(b.hubungan);
+        });
+
+        if (searchTerm) {
+          setMembers(allAccounts.filter(m =>
+            m.nama_lengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.no_anggota.includes(searchTerm)
+          ));
+        } else {
+          setMembers(allAccounts);
+        }
+      } catch (err) {
+        console.error("Error fetching accounts for reset:", err);
+        toast.error("Gagal memuat data akun");
+      } finally {
+        setLoading(false);
       }
-
-      const { data, error } = await query.limit(20);
-
-      if (error) {
-        console.error("Error fetching members for reset:", error);
-      } else {
-        setMembers(data || []);
-      }
-      setLoading(false);
     };
 
     const timer = setTimeout(fetchMembers, 500);
     return () => clearTimeout(timer);
   }, [searchTerm, activeTab]);
 
-  const handleResetPassword = async (id_anggota: number, name: string) => {
+  const handleResetPassword = async (m: any) => {
     if (
       !confirm(
-        `Apakah Anda yakin ingin me-reset password untuk ${name}? Member akan diminta membuat password baru saat login berikutnya.`,
+        `Apakah Anda yakin ingin me-reset password untuk ${toTitleCase(m.nama_lengkap)} (${m.hubungan})? Login ini akan dihapus secara permanen.`,
       )
     ) {
       return;
     }
 
-    const { error } = await supabase
-      .from("member_accounts")
-      .delete()
-      .eq("id_anggota", id_anggota);
+    try {
+      const { error } = await supabase
+        .from("member_accounts")
+        .delete()
+        .eq("id_anggota", m.account_id_anggota);
 
-    if (error) {
+      if (error) throw error;
+
+      toast.success(`Password ${m.nama_lengkap} berhasil di-reset`);
+      setMembers((prev) => prev.filter((item) => item.account_id_anggota !== m.account_id_anggota));
+    } catch (err) {
+      console.error("Error during reset:", err);
       toast.error("Gagal melakukan reset password");
-    } else {
-      toast.success(`Password ${name} berhasil di-reset`);
-      setMembers((prev) => prev.filter((m) => m.id !== id_anggota));
     }
   };
 
@@ -106,36 +153,33 @@ export function OthersView({
       <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-full sm:w-fit overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab("cuti")}
-          className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-            activeTab === "cuti"
-              ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
-              : "text-gray-500 hover:bg-gray-50"
-          }`}
+          className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeTab === "cuti"
+            ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
+            : "text-gray-500 hover:bg-gray-50"
+            }`}
         >
           <Calendar className="w-4 h-4" />
           Tab Cuti
         </button>
-        
+
         {/* Only Super Admin can see Pendaftaran & Password Reset */}
         {isSuperAdmin && (
           <>
             <button
               onClick={() => setActiveTab("pendaftaran")}
-              className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                activeTab === "pendaftaran"
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
-                  : "text-gray-500 hover:bg-gray-50"
-              }`}
+              className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeTab === "pendaftaran"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
+                : "text-gray-500 hover:bg-gray-50"
+                }`}
             >
               Persetujuan Pendaftaran
             </button>
             <button
               onClick={() => setActiveTab("password")}
-              className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                activeTab === "password"
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
-                  : "text-gray-500 hover:bg-gray-50"
-              }`}
+              className={`flex items-center gap-2 py-2.5 px-6 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeTab === "password"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
+                : "text-gray-500 hover:bg-gray-50"
+                }`}
             >
               Reset Password Member
             </button>
@@ -157,8 +201,8 @@ export function OthersView({
               {isImamOrMarbot ? "Pengajuan Cuti" : "Persetujuan Cuti"}
             </h3>
             <p className="text-gray-500 text-sm max-w-sm mx-auto">
-              {isImamOrMarbot 
-                ? "Halaman pengajuan cuti sedang dalam pengembangan." 
+              {isImamOrMarbot
+                ? "Halaman pengajuan cuti sedang dalam pengembangan."
                 : "Halaman persetujuan cuti sedang dalam pengembangan."}
             </p>
           </motion.div>
@@ -197,8 +241,7 @@ export function OthersView({
                     Reset Password Anggota
                   </h3>
                   <p className="text-xs text-gray-500">
-                    Hanya anggota yang sudah pernah membuat password yang muncul
-                    di sini.
+                    Semua individu yang memiliki akun login akan muncul di sini.
                   </p>
                 </div>
               </div>
@@ -238,7 +281,7 @@ export function OthersView({
                             {toTitleCase(m.nama_lengkap)}
                           </p>
                           <p className="text-[10px] text-gray-500 font-medium tracking-wide">
-                            RT {m.rt}/RW {m.rw} • {m.no_anggota}
+                            {m.hubungan} • RT {m.rt}/RW {m.rw} • {m.no_anggota}
                           </p>
                         </div>
                       </div>
@@ -246,7 +289,7 @@ export function OthersView({
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                          handleResetPassword(m.id, m.nama_lengkap)
+                          handleResetPassword(m)
                         }
                         className="text-amber-600 hover:text-white hover:bg-amber-600 rounded-lg gap-2"
                       >
