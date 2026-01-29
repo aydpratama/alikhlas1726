@@ -43,16 +43,17 @@ export function MemberListView({
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [filterJenisAnggota, setFilterJenisAnggota] = useState<string>("");
+  const [filterAktif, setFilterAktif] = useState<string>("");
+  const [filterTidakAktif, setFilterTidakAktif] = useState<string>("");
   const [filterRt, setFilterRt] = useState<string>("");
   const [filterRw, setFilterRw] = useState<string>("");
   const itemsPerPage = 5;
 
-  const hasActiveFilters = filterJenisAnggota || filterRt || filterRw;
+  const hasActiveFilters = filterAktif || filterTidakAktif || filterRt || filterRw;
 
-  const uniqueJenisAnggota = Array.from(
-    new Set(members.map((m) => m.jenis_anggota)),
-  ).sort();
+  const statusAktifOptions = ["Tetap", "Tetap Tambahan", "Umum"];
+  const statusTidakAktifOptions = ["Pindah", "Meninggal Dunia"];
+
   const uniqueRtValues = Array.from(
     new Set(
       members.map((m) => m.rt).filter((rt): rt is number => rt !== undefined),
@@ -65,14 +66,15 @@ export function MemberListView({
   ).sort((a, b) => a - b);
 
   const resetFilters = () => {
-    setFilterJenisAnggota("");
+    setFilterAktif("");
+    setFilterTidakAktif("");
     setFilterRt("");
     setFilterRw("");
     setSearchTerm("");
   };
 
   const filteredMembers = (() => {
-    // 1. Dapatkan semua ID keluarga (no_anggota prefix) yang cocok dengan kriteria pencarian/filter
+    // 1. Dapatkan semua ID keluarga (no_anggota prefix) yang cocok dengan kriteria pencarian/filter RT-RW
     const matchingFamilyIds = new Set(
       members
         .filter((member) => {
@@ -82,19 +84,36 @@ export function MemberListView({
               .toLowerCase()
               .includes(searchTerm.toLowerCase()) ||
             member.no_anggota.toLowerCase().includes(searchTerm.toLowerCase());
-          const matchJenisAnggota =
-            !filterJenisAnggota || member.jenis_anggota === filterJenisAnggota;
           const matchRt = !filterRt || member.rt === parseInt(filterRt);
           const matchRw = !filterRw || member.rw === parseInt(filterRw);
-          return matchSearch && matchJenisAnggota && matchRt && matchRw;
+          return matchSearch && matchRt && matchRw;
         })
         .map((m) => m.no_anggota.split(".")[0]),
     );
 
-    // 2. Kembalikan SEMUA anggota yang memiliki ID keluarga yang cocok
-    return members.filter((member) =>
+    // 2. Ambil semua anggota dari keluarga yang cocok
+    let results = members.filter((member) =>
       matchingFamilyIds.has(member.no_anggota.split(".")[0]),
     );
+
+    // 3. Terapkan filter status secara INDIVIDUAL jika dipilih
+    if (filterAktif) {
+      results = results.filter(
+        (m) =>
+          m.status?.toLowerCase() === "aktif" &&
+          m.jenis_anggota === filterAktif,
+      );
+    } else if (filterTidakAktif) {
+      results = results.filter((m) => {
+        const s = m.status?.toLowerCase() || "";
+        const f = filterTidakAktif.toLowerCase();
+        // Handle "Meninggal Dunia" vs "Meninggal dunia"
+        if (f.includes("meninggal")) return s.includes("meninggal");
+        return s === f;
+      });
+    }
+
+    return results;
   })();
 
   // Group members by Family
@@ -139,7 +158,7 @@ export function MemberListView({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterJenisAnggota, filterRt, filterRw]);
+  }, [searchTerm, filterAktif, filterTidakAktif, filterRt, filterRw]);
 
   const Badge = ({
     label,
@@ -233,12 +252,31 @@ export function MemberListView({
             </select>
 
             <select
-              value={filterJenisAnggota}
-              onChange={(e) => setFilterJenisAnggota(e.target.value)}
-              className="col-span-2 md:w-auto px-3 h-11 sm:h-9 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer transition-all"
+              value={filterAktif}
+              onChange={(e) => {
+                setFilterAktif(e.target.value);
+                setFilterTidakAktif("");
+              }}
+              className="w-full md:w-auto px-3 h-11 sm:h-9 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer transition-all"
             >
-              <option value="">Jenis Anggota: Semua</option>
-              {uniqueJenisAnggota.map((jenis) => (
+              <option value="">Status: Aktif (Semua)</option>
+              {statusAktifOptions.map((jenis) => (
+                <option key={jenis} value={jenis}>
+                  {jenis}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filterTidakAktif}
+              onChange={(e) => {
+                setFilterTidakAktif(e.target.value);
+                setFilterAktif("");
+              }}
+              className="w-full md:w-auto px-3 h-11 sm:h-9 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer transition-all"
+            >
+              <option value="">Status: Tidak Aktif (Semua)</option>
+              {statusTidakAktifOptions.map((jenis) => (
                 <option key={jenis} value={jenis}>
                   {jenis}
                 </option>
@@ -276,10 +314,16 @@ export function MemberListView({
                   onRemove={() => setFilterRt("")}
                 />
               )}
-              {filterJenisAnggota && (
+              {filterAktif && (
                 <Badge
-                  label={filterJenisAnggota}
-                  onRemove={() => setFilterJenisAnggota("")}
+                  label={`Aktif: ${filterAktif}`}
+                  onRemove={() => setFilterAktif("")}
+                />
+              )}
+              {filterTidakAktif && (
+                <Badge
+                  label={`Tidak Aktif: ${filterTidakAktif}`}
+                  onRemove={() => setFilterTidakAktif("")}
                 />
               )}
             </div>
@@ -343,7 +387,7 @@ export function MemberListView({
         dues={dues}
         defaultYear={selectedYear}
         activeFilters={{
-          jenisAnggota: filterJenisAnggota,
+          jenisAnggota: filterAktif || filterTidakAktif,
           rt: filterRt,
           rw: filterRw,
           searchTerm: searchTerm,
