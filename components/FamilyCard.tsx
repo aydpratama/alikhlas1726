@@ -210,16 +210,16 @@ export function FamilyCard({
     });
   };
 
-  const getBadgeColor = (jenisAnggota: string) => {
-    const normalized = jenisAnggota?.trim().toLowerCase();
+  const getBadgeColor = (status?: string) => {
+    const normalized = status?.trim().toLowerCase() || "aktif";
 
     switch (normalized) {
-      case "tetap":
+      case "aktif":
         return "bg-teal-100 text-teal-700";
-      case "tetap tambahan":
-        return "bg-teal-100 text-teal-700";
-      case "umum":
-        return "bg-orange-100 text-orange-700";
+      case "pindah":
+        return "bg-amber-100 text-amber-700";
+      case "meninggal dunia":
+        return "bg-rose-100 text-rose-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -661,9 +661,9 @@ export function FamilyCard({
                   )}
                 </div>
                 <Badge
-                  className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${getBadgeColor(member.jenis_anggota)}`}
+                  className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${getBadgeColor(member.status)}`}
                 >
-                  {member.jenis_anggota}
+                  {member.status || "Aktif"}
                 </Badge>
               </div>
 
@@ -727,8 +727,8 @@ export function FamilyCard({
                 )}
               </div>
 
-              {/* Payment Grid - Only for Umum */}
-              {isUmum && (
+              {/* Payment Grid - Only for Umum and Aktif */}
+              {isUmum && (member.status || "Aktif").toLowerCase() === "aktif" && (
                 <div className="space-y-2">
                   {/* Show edit button for admin if not currently editing */}
                   {isAdmin && editingMemberId !== member.id && (
