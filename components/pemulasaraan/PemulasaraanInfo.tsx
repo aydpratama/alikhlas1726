@@ -385,6 +385,7 @@ export function InfoView({ onRegister }: { onRegister: () => void }) {
             "Mendapatkan layanan seperti Memandikan, Mengkafankan, Mensholatkan and Menguburkan hingga doa terakhir.",
             "Mendapatkan layanan kebersihan pasca memandikan jenazah.",
             "Mendapatkan layanan mobil ambulance dalam kota Bekasi secara gratis.",
+            "Apabila anggota meninggal di luar wilayah Al Ikhlas dan tidak memanfaatkan layanan pemulasaraan Al Ikhlas, sebagai pengganti adalah uang kerohiman sebesar Rp 500.000 (anggota aktif).",
           ].map((text, i) => (
             <div
               key={i}
