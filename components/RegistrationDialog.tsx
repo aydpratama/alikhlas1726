@@ -115,8 +115,25 @@ export function RegistrationDialog({
   };
 
   const updateMember = (index: number, updates: Partial<MemberEntry>) => {
-    const newMembers = [...members];
-    newMembers[index] = { ...newMembers[index], ...updates };
+    let newMembers = [...members];
+
+    // Jika set sebagai Kepala Keluarga, ubah anggota lain yang sebelumnya KK menjadi Lainnya
+    if (updates.hubungan_keluarga === "Kepala Keluarga") {
+      newMembers = newMembers.map((m, i) =>
+        i === index
+          ? { ...m, ...updates }
+          : {
+            ...m,
+            hubungan_keluarga:
+              m.hubungan_keluarga === "Kepala Keluarga"
+                ? "Lainnya"
+                : m.hubungan_keluarga,
+          },
+      );
+    } else {
+      newMembers[index] = { ...newMembers[index], ...updates };
+    }
+
     setMembers(newMembers);
   };
 
@@ -136,33 +153,35 @@ export function RegistrationDialog({
     setIsSubmitting(true);
 
     try {
-      const kepalaKeluarga =
+      const kepalaKeluargaRaw =
         members.find((m) => m.hubungan_keluarga === "Kepala Keluarga")
           ?.nama_lengkap || members[0].nama_lengkap;
+      const kepalaKeluarga = kepalaKeluargaRaw.trim();
 
-      const insertPromises = members.map((m) => {
+      const membersToInsert = members.map((m) => {
         const pendaftaranBiaya = m.jenis_anggota
           ? JENIS_ANGGOTA_INFO[m.jenis_anggota].biaya
           : 0;
-        return (supabase.from("pendaftaran_pemulasaraan") as any).insert({
-          nama_lengkap: m.nama_lengkap,
+        return {
+          nama_lengkap: m.nama_lengkap.trim(),
           jenis_anggota: m.jenis_anggota,
           hubungan_keluarga: m.hubungan_keluarga,
-          alamat: familyInfo.alamat,
+          alamat: familyInfo.alamat.trim(),
           rt: parseInt(familyInfo.rt),
           rw: parseInt(familyInfo.rw),
-          email: familyInfo.email || null,
-          no_telepon: familyInfo.no_telepon || null,
+          email: familyInfo.email?.trim() || null,
+          no_telepon: familyInfo.no_telepon?.trim() || null,
           nama_kepala_keluarga: kepalaKeluarga,
           biaya_pendaftaran: pendaftaranBiaya,
           status: "pending",
-        });
+        };
       });
 
-      const results = await Promise.all(insertPromises);
-      const errors = results.filter((r) => r.error);
+      const { error } = await (
+        supabase.from("pendaftaran_pemulasaraan") as any
+      ).insert(membersToInsert);
 
-      if (errors.length > 0) throw errors[0].error;
+      if (error) throw error;
 
       toast.success(
         "Pendaftaran berhasil dikirim! Mohon tunggu konfirmasi dari admin.",

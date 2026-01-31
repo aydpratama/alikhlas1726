@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X, Users } from "lucide-react";
+import { Check, X, Users, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/Toast";
 import { toTitleCase, getRelationRank } from "@/lib/utils";
@@ -169,10 +169,61 @@ export function RegistrationApproval({
     }
   };
 
-  // Group registrations by nama_kepala_keluarga
+  const handlePermanentDelete = async (members: any[]) => {
+    const familyName =
+      members[0].nama_kepala_keluarga || members[0].nama_lengkap;
+    if (!confirm(`HAPUS PERMANEN pendaftaran untuk keluarga ${familyName}? Tindakan ini tidak bisa dibatalkan.`)) return;
+
+    setIsLoading(true);
+    try {
+      const memberIds = members.map((m) => m.id);
+      const { error } = await (supabase
+        .from("pendaftaran_pemulasaraan") as any)
+        .delete()
+        .in("id", memberIds);
+
+      if (error) throw error;
+
+      toast.success(`Data pendaftaran ${familyName} telah dihapus permanen`);
+      fetchRegistrations();
+      if (onDataChange) onDataChange();
+    } catch (e: any) {
+      console.error("Error deleting registration:", e);
+      toast.error("Gagal menghapus data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteSingle = async (reg: any) => {
+    if (!confirm(`Hapus pendaftaran untuk "${reg.nama_lengkap}"?`)) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await (supabase
+        .from("pendaftaran_pemulasaraan") as any)
+        .delete()
+        .eq("id", reg.id);
+
+      if (error) throw error;
+
+      toast.success(`Data ${reg.nama_lengkap} telah dihapus`);
+      fetchRegistrations();
+      if (onDataChange) onDataChange();
+    } catch (e: any) {
+      console.error("Error deleting member:", e);
+      toast.error("Gagal menghapus data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Group registrations by nama_kepala_keluarga + address to ensure one family = one card
   const groupedRegistrations = registrations.reduce(
     (acc: { [key: string]: any[] }, reg: any) => {
-      const key = reg.nama_kepala_keluarga || "Tanpa Kepala Keluarga";
+      // Use combination of name, address, and RT/RW to group identical families together
+      const key = `${reg.nama_kepala_keluarga || "Tanpa Kepala Keluarga"}_${reg.alamat || ""}_${reg.rt || ""}_${reg.rw || ""}`;
+
       if (!acc[key]) acc[key] = [];
       acc[key].push(reg);
       return acc;
@@ -239,8 +290,13 @@ export function RegistrationApproval({
                         Kepala Keluarga
                       </p>
                       <h4 className="font-bold text-slate-900 leading-none">
-                        {kepalaKeluarga}
+                        {members[0].nama_kepala_keluarga || "Tanpa Kepala Keluarga"}
                       </h4>
+                      {members[0].created_at && (
+                        <p className="text-[9px] text-slate-400 mt-1 font-medium italic">
+                          Dibuat: {new Date(members[0].created_at).toLocaleString("id-ID")}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
@@ -293,6 +349,14 @@ export function RegistrationApproval({
                           </p>
                         </div>
                       </div>
+                      <button
+                        onClick={() => handleDeleteSingle(reg)}
+                        disabled={isLoading}
+                        className="p-2 text-rose-400 hover:text-rose-600 transition-colors"
+                        title="Hapus individu"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -313,6 +377,16 @@ export function RegistrationApproval({
                     </span>
                   </p>
                   <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isLoading}
+                      className="h-11 sm:h-8 w-11 sm:w-8 p-0 text-rose-500 border-rose-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+                      onClick={() => handlePermanentDelete(members)}
+                      title="Hapus Permanen"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
