@@ -52,6 +52,7 @@ interface FamilyCardProps {
   onEditMember?: (member: FamilyMember) => void; // Callback for editing member
   onDeleteMember?: (memberId: number) => void; // Callback for deleting member
   onAddMember?: () => void; // Callback for adding new member
+  isIuranOnly?: boolean;
 }
 
 const MONTHS = [
@@ -79,6 +80,7 @@ export function FamilyCard({
   onEditMember,
   onDeleteMember,
   onAddMember,
+  isIuranOnly = false,
 }: FamilyCardProps) {
   // State for editing iuran
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
@@ -574,7 +576,7 @@ export function FamilyCard({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {isAdmin && onAddMember && (
+            {isAdmin && !isIuranOnly && onAddMember && (
               <button
                 onClick={onAddMember}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold hover:bg-amber-100 transition-all shadow-sm active:scale-95"
@@ -583,7 +585,7 @@ export function FamilyCard({
               </button>
             )}
 
-            {isAdmin ? (
+            {isAdmin && !isIuranOnly ? (
               <div className="flex items-center bg-white shadow-sm border border-slate-200 rounded-lg p-0.5 overflow-hidden">
                 <button
                   onClick={handleExportExcel}
@@ -601,7 +603,7 @@ export function FamilyCard({
                   PDF
                 </button>
               </div>
-            ) : (
+            ) : isAdmin && isIuranOnly ? null : (
               <button
                 onClick={handleExportPDF}
                 className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-[11px] font-bold hover:bg-indigo-100 transition-all shadow-sm active:scale-95"
@@ -631,7 +633,7 @@ export function FamilyCard({
                   <h4 className="text-sm font-bold text-gray-900">
                     {toTitleCase(member.nama_lengkap)}
                   </h4>
-                  {isAdmin && (
+                  {isAdmin && !isIuranOnly && (
                     <div className="flex gap-1">
                       {onEditMember && (
                         <button

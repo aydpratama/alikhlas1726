@@ -28,6 +28,7 @@ interface MemberListViewProps {
   onEditMember: (m: Member) => void;
   onDeleteMember: (id: number) => void;
   onDataChange: () => void;
+  isIuranOnly?: boolean;
 }
 
 export function MemberListView({
@@ -39,6 +40,7 @@ export function MemberListView({
   onEditMember,
   onDeleteMember,
   onDataChange,
+  isIuranOnly = false,
 }: MemberListViewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -194,7 +196,7 @@ export function MemberListView({
             />
           </div>
           <div className="flex items-center gap-2 w-full lg:w-auto">
-            {isAdmin && (
+            {isAdmin && !isIuranOnly && (
               <div className="flex items-center gap-2 w-full lg:w-auto">
                 <button
                   onClick={() => setIsExportDialogOpen(true)}
@@ -344,6 +346,7 @@ export function MemberListView({
             )}
             selectedYear={selectedYear}
             isAdmin={isAdmin}
+            isIuranOnly={isIuranOnly}
             onEditMember={(m) => onEditMember(m as Member)}
             onDeleteMember={onDeleteMember}
             onDataChange={onDataChange}

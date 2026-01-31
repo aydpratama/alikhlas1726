@@ -1,16 +1,17 @@
 import { supabase } from '../supabase';
 
-export type Permission = 
-  | '*' 
-  | 'bendahara' 
-  | 'donatur' 
-  | 'galeri' 
-  | 'ustadz' 
-  | 'program' 
-  | 'pengumuman' 
-  | 'info_struktur' 
-  | 'kajian' 
-  | 'pemulasaraan_umum_edit';
+export type Permission =
+  | '*'
+  | 'bendahara'
+  | 'donatur'
+  | 'galeri'
+  | 'ustadz'
+  | 'program'
+  | 'pengumuman'
+  | 'info_struktur'
+  | 'kajian'
+  | 'pemulasaraan_umum_edit'
+  | 'iuran_pemulasaraan';
 
 export interface AdminProfile {
   id: string;
@@ -41,7 +42,7 @@ export async function getAdminProfile(): Promise<AdminProfile | null> {
       .select('id, auth_id, email, nama_lengkap, peran')
       .eq('email', user.email)
       .maybeSingle();
-    
+
     data = result.data;
     error = result.error;
 
@@ -75,20 +76,20 @@ export async function getAdminProfile(): Promise<AdminProfile | null> {
  */
 export function hasPermission(profile: AdminProfile | null, permission: Permission): boolean {
   if (!profile) return false;
-  
+
   const peran = profile.peran;
-  
+
   // Mapping sederhana peran ke permission
   if (peran === 'super_admin') return true;
-  
+
   // Imam dan Marbot hanya untuk login cuti, bukan admin web
   if (peran === 'imam' || peran === 'marbot') {
     return false;
   }
-  
+
   switch (permission) {
     case 'bendahara':
-      return peran === 'bendahara' || peran === 'iuran';
+      return peran === 'bendahara';
     case 'donatur':
       return peran === 'bendahara';
     case 'galeri':
@@ -102,6 +103,8 @@ export function hasPermission(profile: AdminProfile | null, permission: Permissi
       return peran === 'editor' || peran === 'konten';
     case 'pemulasaraan_umum_edit':
       return peran === 'bendahara';
+    case 'iuran_pemulasaraan':
+      return peran === 'bendahara' || peran === 'iuran';
     default:
       return false;
   }

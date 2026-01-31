@@ -25,7 +25,7 @@ interface Study {
 }
 
 export function WeeklyKajianSchedule() {
-  const { canManageContent } = useAdmin();
+  const { canManageKajian } = useAdmin();
   const [activeWeek, setActiveWeek] = useState(1);
   const [todayWeek, setTodayWeek] = useState(1);
   const [studies, setStudies] = useState<Study[]>([]);
@@ -193,7 +193,7 @@ export function WeeklyKajianSchedule() {
 
       {/* Week Navigation + Add Button */}
       <div className="flex flex-row items-center justify-center gap-3">
-        {canManageContent && (
+        {canManageKajian && (
           <button
             onClick={openCreate}
             className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all duration-200 shadow-sm"
@@ -209,11 +209,10 @@ export function WeeklyKajianSchedule() {
             <button
               key={w}
               onClick={() => setActiveWeek(w)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${
-                activeWeek === w
+              className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${activeWeek === w
                   ? "bg-gray-800 text-white shadow-sm"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-              } ${todayWeek === w ? "ring-2 ring-emerald-500 ring-offset-1" : ""}`}
+                } ${todayWeek === w ? "ring-2 ring-emerald-500 ring-offset-1" : ""}`}
             >
               Pekan {w}
             </button>
@@ -263,7 +262,7 @@ export function WeeklyKajianSchedule() {
                       className="group p-4 bg-gray-900 hover:bg-gray-700/50 rounded-md transition-colors relative"
                     >
                       {/* Action Buttons */}
-                      {canManageContent && (
+                      {canManageKajian && (
                         <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => openEdit(study)}

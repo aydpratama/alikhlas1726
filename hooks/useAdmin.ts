@@ -15,6 +15,8 @@ interface HookReturn {
     canManageDonors: boolean;
     canManageContent: boolean;
     canManageInfo: boolean;
+    canManageKajian: boolean;
+    canManageIuranPemulasaraan: boolean;
     profile: AdminProfile | null;
     memberData: {
         id: number;
@@ -37,9 +39,9 @@ export function useAdmin(): HookReturn {
             try {
                 // Check Supabase Session (Admin)
                 const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                
+
                 if (sessionError) throw sessionError;
-                
+
                 if (session?.user) {
                     if (isMounted) setUserEmail(session.user.email || null);
                     const adminProfile = await getAdminProfile();
@@ -85,18 +87,22 @@ export function useAdmin(): HookReturn {
     const canManageContent = hasPermission(profile, 'galeri');
     const canManageInfo = hasPermission(profile, 'info_struktur');
     const canManageDonors = hasPermission(profile, 'donatur');
+    const canManageKajian = hasPermission(profile, 'kajian');
+    const canManageIuranPemulasaraan = hasPermission(profile, 'iuran_pemulasaraan');
 
-    return { 
-        isSuperAdmin, 
+    return {
+        isSuperAdmin,
         isAdmin: !!profile,
-        isMember: !!memberData, 
-        familyNo: memberData?.familyNo || null, 
-        isLoading, 
-        userEmail, 
+        isMember: !!memberData,
+        familyNo: memberData?.familyNo || null,
+        isLoading,
+        userEmail,
         canManageFinance,
         canManageDonors,
         canManageContent,
         canManageInfo,
+        canManageKajian,
+        canManageIuranPemulasaraan,
         profile,
         memberData
     };

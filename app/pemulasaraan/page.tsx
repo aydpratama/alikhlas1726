@@ -25,7 +25,9 @@ export default function PemulasaraanPage() {
     isLoading: isAdminLoading,
     userEmail,
     profile,
+    canManageIuranPemulasaraan,
   } = useAdmin();
+  const isIuranOnly = profile?.peran === "iuran";
   const [activeTab, setActiveTab] = useState(isMember ? "my-card" : "info");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [hasSetInitialTab, setHasSetInitialTab] = useState(false);
@@ -147,17 +149,20 @@ export default function PemulasaraanPage() {
           </div>
         );
       case "member":
-        if (!isSuperAdmin)
+        if (!isSuperAdmin && !canManageIuranPemulasaraan)
           return (
             <div className="p-8 text-center text-gray-500 font-bold">
               Akses Dibatasi
             </div>
           );
+
+
         return (
           <MemberListView
             members={members}
             dues={dues}
-            isAdmin={isSuperAdmin}
+            isAdmin={isSuperAdmin || canManageIuranPemulasaraan}
+            isIuranOnly={isIuranOnly}
             selectedYear={selectedYear}
             onAddMember={handleAddMember}
             onEditMember={handleEditMember}
@@ -237,28 +242,28 @@ export default function PemulasaraanPage() {
             {(activeTab === "member" ||
               activeTab === "laporan" ||
               activeTab === "my-card") && (
-              <div className="flex items-center gap-2 bg-white border-2 border-emerald-100 px-4 py-2.5 rounded-2xl group hover:border-emerald-500 transition-all shadow-sm">
-                <FileText className="w-4 h-4 text-emerald-600" />
-                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                  Periode :
-                </span>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="bg-transparent text-sm font-black text-emerald-700 outline-none cursor-pointer pr-1"
-                >
-                  {availableYears.map((year) => (
-                    <option
-                      key={year}
-                      value={year}
-                      className="font-sans text-gray-900"
-                    >
-                      Tahun {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+                <div className="flex items-center gap-2 bg-white border-2 border-emerald-100 px-4 py-2.5 rounded-2xl group hover:border-emerald-500 transition-all shadow-sm">
+                  <FileText className="w-4 h-4 text-emerald-600" />
+                  <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                    Periode :
+                  </span>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="bg-transparent text-sm font-black text-emerald-700 outline-none cursor-pointer pr-1"
+                  >
+                    {availableYears.map((year) => (
+                      <option
+                        key={year}
+                        value={year}
+                        className="font-sans text-gray-900"
+                      >
+                        Tahun {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
           </div>
         </div>
 
@@ -271,17 +276,18 @@ export default function PemulasaraanPage() {
                 ? [{ id: "my-card", label: "Kartu Saya", icon: FileText }]
                 : []),
               ...(isSuperAdmin ||
-              profile?.peran === "imam" ||
-              profile?.peran === "marbot"
+                canManageIuranPemulasaraan ||
+                profile?.peran === "imam" ||
+                profile?.peran === "marbot"
                 ? [
-                    ...(isSuperAdmin
-                      ? [
-                          { id: "member", label: "Anggota", icon: Users },
-                          { id: "laporan", label: "Laporan", icon: FileText },
-                        ]
-                      : []),
-                    { id: "lainnya", label: "Lainnya", icon: LayoutGrid },
-                  ]
+                  ...(isSuperAdmin || canManageIuranPemulasaraan
+                    ? [
+                      { id: "member", label: "Anggota", icon: Users },
+                      ...(isSuperAdmin ? [{ id: "laporan", label: "Laporan", icon: FileText }] : []),
+                    ]
+                    : []),
+                  ...(!isIuranOnly ? [{ id: "lainnya", label: "Lainnya", icon: LayoutGrid }] : []),
+                ]
                 : []),
             ].map((tab) => {
               const active = activeTab === tab.id;
@@ -289,11 +295,10 @@ export default function PemulasaraanPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center justify-center gap-2 px-6 py-2.5 rounded-full transition-all duration-300 whitespace-nowrap text-sm font-bold tracking-tight ${
-                    active
-                      ? "text-white"
-                      : "text-gray-600 hover:text-emerald-800"
-                  }`}
+                  className={`relative flex items-center justify-center gap-2 px-6 py-2.5 rounded-full transition-all duration-300 whitespace-nowrap text-sm font-bold tracking-tight ${active
+                    ? "text-white"
+                    : "text-gray-600 hover:text-emerald-800"
+                    }`}
                 >
                   {active && (
                     <motion.div
