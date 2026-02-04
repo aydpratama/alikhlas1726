@@ -431,7 +431,7 @@ export function InfoSections() {
                     <Image
                       src={
                         ann.image ||
-                        "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=800&q=80"
+                        "/alikhlas_luar.png"
                       }
                       alt={ann.title}
                       fill
