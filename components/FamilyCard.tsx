@@ -222,6 +222,8 @@ export function FamilyCard({
         return "bg-amber-100 text-amber-700";
       case "meninggal dunia":
         return "bg-rose-100 text-rose-700";
+      case "mengundurkan diri":
+        return "bg-slate-100 text-slate-700";
       default:
         return "bg-gray-100 text-gray-700";
     }

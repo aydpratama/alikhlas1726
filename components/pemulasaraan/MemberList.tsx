@@ -5,7 +5,6 @@ import { Member } from "@/types/membership";
 import { FamilyMember } from "@/components/FamilyCard";
 import { MemberDialog } from "./MemberDialog";
 import { FamilyCard } from "@/components/FamilyCard";
-import { ExportDuesDialog } from "./ExportDuesDialog";
 import {
   Search,
   UserPlus,
@@ -16,8 +15,11 @@ import {
   Filter,
   X,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { toTitleCase, getRelationRank } from "@/lib/utils";
+import { exportMembersToExcel, exportMembersToPDF } from "@/lib/pemulasaraan-export";
+import { useToast } from "@/components/Toast";
 
 interface MemberListViewProps {
   members: Member[];
@@ -44,17 +46,18 @@ export function MemberListView({
 }: MemberListViewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [filterAktif, setFilterAktif] = useState<string>("");
-  const [filterTidakAktif, setFilterTidakAktif] = useState<string>("");
+  const [isExporting, setIsExporting] = useState<"excel" | "pdf" | null>(null);
+  const toast = useToast();
+  const [filterJenis, setFilterJenis] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
   const [filterRt, setFilterRt] = useState<string>("");
   const [filterRw, setFilterRw] = useState<string>("");
   const itemsPerPage = 5;
 
-  const hasActiveFilters = filterAktif || filterTidakAktif || filterRt || filterRw;
+  const hasActiveFilters = filterJenis || filterStatus || filterRt || filterRw;
 
-  const statusAktifOptions = ["Tetap", "Tetap Tambahan", "Umum"];
-  const statusTidakAktifOptions = ["Pindah", "Meninggal Dunia"];
+  const jenisOptions = ["Umum", "Tetap", "Tetap Tambahan"];
+  const statusOptions = ["Aktif", "Meninggal dunia", "Pindah", "Mengundurkan diri"];
 
   const uniqueRtValues = Array.from(
     new Set(
@@ -68,8 +71,8 @@ export function MemberListView({
   ).sort((a, b) => a - b);
 
   const resetFilters = () => {
-    setFilterAktif("");
-    setFilterTidakAktif("");
+    setFilterJenis("");
+    setFilterStatus("");
     setFilterRt("");
     setFilterRw("");
     setSearchTerm("");
@@ -98,19 +101,18 @@ export function MemberListView({
       matchingFamilyIds.has(member.no_anggota.split(".")[0]),
     );
 
-    // 3. Terapkan filter status secara INDIVIDUAL jika dipilih
-    if (filterAktif) {
+    // 3. Terapkan filter Jenis Anggota secara INDIVIDUAL jika dipilih
+    if (filterJenis) {
       results = results.filter(
-        (m) =>
-          m.status?.toLowerCase() === "aktif" &&
-          m.jenis_anggota === filterAktif,
+        (m) => m.jenis_anggota === filterJenis
       );
-    } else if (filterTidakAktif) {
+    }
+
+    // 4. Terapkan filter Status secara INDIVIDUAL jika dipilih
+    if (filterStatus) {
       results = results.filter((m) => {
-        const s = m.status?.toLowerCase() || "";
-        const f = filterTidakAktif.toLowerCase();
-        // Handle "Meninggal Dunia" vs "Meninggal dunia"
-        if (f.includes("meninggal")) return s.includes("meninggal");
+        const s = (m.status || "Aktif").toLowerCase();
+        const f = filterStatus.toLowerCase();
         return s === f;
       });
     }
@@ -160,7 +162,7 @@ export function MemberListView({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterAktif, filterTidakAktif, filterRt, filterRw]);
+  }, [searchTerm, filterJenis, filterStatus, filterRt, filterRw]);
 
   const Badge = ({
     label,
@@ -199,17 +201,67 @@ export function MemberListView({
             {isAdmin && !isIuranOnly && (
               <div className="flex items-center gap-2 w-full lg:w-auto">
                 <button
-                  onClick={() => setIsExportDialogOpen(true)}
-                  className="w-full lg:w-auto flex items-center justify-center gap-2.5 px-6 h-11 sm:h-10 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-200 transition-all active:scale-95 shadow-sm"
+                  onClick={async () => {
+                    setIsExporting("excel");
+                    try {
+                      await exportMembersToExcel({
+                        members: filteredMembers,
+                        dues: dues,
+                        year: selectedYear,
+                        activeFilters: {
+                          jenisAnggota: filterJenis,
+                          status: filterStatus,
+                          rt: filterRt,
+                          rw: filterRw,
+                          searchTerm: searchTerm,
+                        },
+                      });
+                    } catch (e) {
+                      toast.error("Gagal export Excel");
+                    } finally {
+                      setIsExporting(null);
+                    }
+                  }}
+                  disabled={isExporting !== null}
+                  className="w-full lg:w-auto flex items-center justify-center gap-2.5 px-6 h-11 sm:h-10 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-200 transition-all active:scale-95 shadow-sm disabled:opacity-50"
                 >
-                  <FileDown className="w-4 h-4 text-emerald-600" />
+                  {isExporting === "excel" ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                  ) : (
+                    <FileDown className="w-4 h-4 text-emerald-600" />
+                  )}
                   <span className="whitespace-nowrap">Export Excel</span>
                 </button>
                 <button
-                  onClick={() => setIsExportDialogOpen(true)}
-                  className="w-full lg:w-auto flex items-center justify-center gap-2.5 px-6 h-11 sm:h-10 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-200 transition-all active:scale-95 shadow-sm"
+                  onClick={async () => {
+                    setIsExporting("pdf");
+                    try {
+                      await exportMembersToPDF({
+                        members: filteredMembers,
+                        dues: dues,
+                        year: selectedYear,
+                        activeFilters: {
+                          jenisAnggota: filterJenis,
+                          status: filterStatus,
+                          rt: filterRt,
+                          rw: filterRw,
+                          searchTerm: searchTerm,
+                        },
+                      });
+                    } catch (e) {
+                      toast.error("Gagal export PDF");
+                    } finally {
+                      setIsExporting(null);
+                    }
+                  }}
+                  disabled={isExporting !== null}
+                  className="w-full lg:w-auto flex items-center justify-center gap-2.5 px-6 h-11 sm:h-10 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-200 transition-all active:scale-95 shadow-sm disabled:opacity-50"
                 >
-                  <FileDown className="w-4 h-4 text-indigo-600" />
+                  {isExporting === "pdf" ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                  ) : (
+                    <FileDown className="w-4 h-4 text-indigo-600" />
+                  )}
                   <span className="whitespace-nowrap">Export PDF</span>
                 </button>
               </div>
@@ -254,15 +306,12 @@ export function MemberListView({
             </select>
 
             <select
-              value={filterAktif}
-              onChange={(e) => {
-                setFilterAktif(e.target.value);
-                setFilterTidakAktif("");
-              }}
+              value={filterJenis}
+              onChange={(e) => setFilterJenis(e.target.value)}
               className="w-full md:w-auto px-3 h-11 sm:h-9 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer transition-all"
             >
-              <option value="">Status: Aktif (Semua)</option>
-              {statusAktifOptions.map((jenis) => (
+              <option value="">Jenis: Semua</option>
+              {jenisOptions.map((jenis) => (
                 <option key={jenis} value={jenis}>
                   {jenis}
                 </option>
@@ -270,17 +319,14 @@ export function MemberListView({
             </select>
 
             <select
-              value={filterTidakAktif}
-              onChange={(e) => {
-                setFilterTidakAktif(e.target.value);
-                setFilterAktif("");
-              }}
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
               className="w-full md:w-auto px-3 h-11 sm:h-9 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer transition-all"
             >
-              <option value="">Status: Tidak Aktif (Semua)</option>
-              {statusTidakAktifOptions.map((jenis) => (
-                <option key={jenis} value={jenis}>
-                  {jenis}
+              <option value="">Status: Semua</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
                 </option>
               ))}
             </select>
@@ -316,16 +362,16 @@ export function MemberListView({
                   onRemove={() => setFilterRt("")}
                 />
               )}
-              {filterAktif && (
+              {filterJenis && (
                 <Badge
-                  label={`Aktif: ${filterAktif}`}
-                  onRemove={() => setFilterAktif("")}
+                  label={`Jenis: ${filterJenis}`}
+                  onRemove={() => setFilterJenis("")}
                 />
               )}
-              {filterTidakAktif && (
+              {filterStatus && (
                 <Badge
-                  label={`Tidak Aktif: ${filterTidakAktif}`}
-                  onRemove={() => setFilterTidakAktif("")}
+                  label={`Status: ${filterStatus}`}
+                  onRemove={() => setFilterStatus("")}
                 />
               )}
             </div>
@@ -382,20 +428,6 @@ export function MemberListView({
           </div>
         </div>
       )}
-
-      <ExportDuesDialog
-        isOpen={isExportDialogOpen}
-        onClose={() => setIsExportDialogOpen(false)}
-        members={filteredMembers}
-        dues={dues}
-        defaultYear={selectedYear}
-        activeFilters={{
-          jenisAnggota: filterAktif || filterTidakAktif,
-          rt: filterRt,
-          rw: filterRw,
-          searchTerm: searchTerm,
-        }}
-      />
     </div>
   );
 }

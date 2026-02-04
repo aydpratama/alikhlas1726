@@ -295,6 +295,7 @@ export function MemberDialog({
                 <option value="Aktif">Aktif</option>
                 <option value="Pindah">Pindah</option>
                 <option value="Meninggal dunia">Meninggal dunia</option>
+                <option value="Mengundurkan diri">Mengundurkan diri</option>
               </select>
             </div>
           </div>
