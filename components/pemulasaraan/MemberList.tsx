@@ -198,7 +198,7 @@ export function MemberListView({
             />
           </div>
           <div className="flex items-center gap-2 w-full lg:w-auto">
-            {isAdmin && !isIuranOnly && (
+            {isAdmin && (
               <div className="flex items-center gap-2 w-full lg:w-auto">
                 <button
                   onClick={async () => {
