@@ -200,38 +200,40 @@ export function MemberListView({
           <div className="flex items-center gap-2 w-full lg:w-auto">
             {isAdmin && (
               <div className="flex items-center gap-2 w-full lg:w-auto">
-                <button
-                  onClick={async () => {
-                    setIsExporting("excel");
-                    try {
-                      await exportMembersToExcel({
-                        members: filteredMembers,
-                        dues: dues,
-                        year: selectedYear,
-                        activeFilters: {
-                          jenisAnggota: filterJenis,
-                          status: filterStatus,
-                          rt: filterRt,
-                          rw: filterRw,
-                          searchTerm: searchTerm,
-                        },
-                      });
-                    } catch (e) {
-                      toast.error("Gagal export Excel");
-                    } finally {
-                      setIsExporting(null);
-                    }
-                  }}
-                  disabled={isExporting !== null}
-                  className="w-full lg:w-auto flex items-center justify-center gap-2.5 px-6 h-11 sm:h-10 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-200 transition-all active:scale-95 shadow-sm disabled:opacity-50"
-                >
-                  {isExporting === "excel" ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
-                  ) : (
-                    <FileDown className="w-4 h-4 text-emerald-600" />
-                  )}
-                  <span className="whitespace-nowrap">Export Excel</span>
-                </button>
+                {!isIuranOnly && (
+                  <button
+                    onClick={async () => {
+                      setIsExporting("excel");
+                      try {
+                        await exportMembersToExcel({
+                          members: filteredMembers,
+                          dues: dues,
+                          year: selectedYear,
+                          activeFilters: {
+                            jenisAnggota: filterJenis,
+                            status: filterStatus,
+                            rt: filterRt,
+                            rw: filterRw,
+                            searchTerm: searchTerm,
+                          },
+                        });
+                      } catch (e) {
+                        toast.error("Gagal export Excel");
+                      } finally {
+                        setIsExporting(null);
+                      }
+                    }}
+                    disabled={isExporting !== null}
+                    className="w-full lg:w-auto flex items-center justify-center gap-2.5 px-6 h-11 sm:h-10 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-200 transition-all active:scale-95 shadow-sm disabled:opacity-50"
+                  >
+                    {isExporting === "excel" ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                    ) : (
+                      <FileDown className="w-4 h-4 text-emerald-600" />
+                    )}
+                    <span className="whitespace-nowrap">Export Excel</span>
+                  </button>
+                )}
                 <button
                   onClick={async () => {
                     setIsExporting("pdf");

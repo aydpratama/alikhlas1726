@@ -278,12 +278,12 @@ export function FamilyCard({
         ["TAHUN :", year],
         ["NO Anggota :", familyData.no_anggota],
         ["Nama Kepala Keluarga :", kepalaKeluarga?.nama_lengkap || ""],
-        ["Alamat :", familyData.alamat || ""],
+        ["Alamat :", `${familyData.alamat || ""} (RT ${familyData.rt || 0} / RW ${familyData.rw || 0})`],
         [], // empty row for spacing
       ];
 
       // 2. Table Headers
-      const tableHeaders = ["No", "Nama", "Pendaftaran", ...MONTH_LABELS_EN];
+      const tableHeaders = ["No", "Nama", "Status", "Pendaftaran", ...MONTH_LABELS_EN];
 
       // 3. Member Data
       const hasUmum = members.some(
@@ -317,6 +317,7 @@ export function FamilyCard({
         return [
           index + 1,
           m.nama_lengkap,
+          m.status || "Aktif",
           m.pendaftaran || 0,
           ...monthValues,
         ];
@@ -432,6 +433,8 @@ export function FamilyCard({
             }</td>
               <td style="padding:6px;border:1px solid #ddd;">${m.nama_lengkap
             }</td>
+              <td style="padding:6px;border:1px solid #ddd;text-align:center;">${m.status || "Aktif"
+            }</td>
               <td style="padding:6px;border:1px solid #ddd;text-align:right;">${m.pendaftaran ? m.pendaftaran.toLocaleString("id-ID") : "0"
             }</td>
               ${monthCells}
@@ -444,6 +447,7 @@ export function FamilyCard({
         <tr style="background:#f3f4f6;">
           <th style="padding:6px;border:1px solid #ddd;">No</th>
           <th style="padding:6px;border:1px solid #ddd;">Nama</th>
+          <th style="padding:6px;border:1px solid #ddd;">Status</th>
           <th style="padding:6px;border:1px solid #ddd;">Pendaftaran</th>
           ${monthLabels
           .map(
@@ -496,7 +500,7 @@ export function FamilyCard({
                 </div>
                 <div class="info-row">
                   <span class="info-label">Alamat:</span>
-                  <span class="info-value">${familyData.alamat || "-"}</span>
+                  <span class="info-value">${familyData.alamat || "-"} (RT ${familyData.rt || 0} / RW ${familyData.rw || 0})</span>
                 </div>
               </div>
             </div>
@@ -587,16 +591,20 @@ export function FamilyCard({
               </button>
             )}
 
-            {isAdmin && !isIuranOnly ? (
+            {isAdmin ? (
               <div className="flex items-center bg-white shadow-sm border border-slate-200 rounded-lg p-0.5 overflow-hidden">
-                <button
-                  onClick={handleExportExcel}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
-                >
-                  <FileDown className="w-3.5 h-3.5" />
-                  Excel
-                </button>
-                <div className="w-[1px] h-4 bg-slate-200" />
+                {!isIuranOnly && (
+                  <>
+                    <button
+                      onClick={handleExportExcel}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      Excel
+                    </button>
+                    <div className="w-[1px] h-4 bg-slate-200" />
+                  </>
+                )}
                 <button
                   onClick={handleExportPDF}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors"
@@ -605,7 +613,7 @@ export function FamilyCard({
                   PDF
                 </button>
               </div>
-            ) : isAdmin && isIuranOnly ? null : (
+            ) : (
               <button
                 onClick={handleExportPDF}
                 className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-[11px] font-bold hover:bg-indigo-100 transition-all shadow-sm active:scale-95"
