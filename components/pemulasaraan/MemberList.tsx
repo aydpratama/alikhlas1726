@@ -79,41 +79,49 @@ export function MemberListView({
   };
 
   const filteredMembers = (() => {
-    // 1. Dapatkan semua ID keluarga (no_anggota prefix) yang cocok dengan kriteria pencarian/filter RT-RW
+    const cleanSearch = searchTerm.trim().toLowerCase();
+    const cleanStatus = filterStatus.trim().toLowerCase();
+
+    // 1. Filter by basic criteria (Name, No Anggota, RT, RW)
+    const matchesInitialFilter = (m: Member) => {
+      const name = (m.nama_lengkap || "").toLowerCase();
+      const no = (m.no_anggota || "").toLowerCase();
+
+      const matchSearch =
+        !cleanSearch ||
+        name.includes(cleanSearch) ||
+        no.includes(cleanSearch);
+      const matchRt = !filterRt || m.rt === parseInt(filterRt);
+      const matchRw = !filterRw || m.rw === parseInt(filterRw);
+      return matchSearch && matchRt && matchRw;
+    };
+
+    // 2. Determine which families should be included (any member matches)
     const matchingFamilyIds = new Set(
       members
-        .filter((member) => {
-          const matchSearch =
-            !searchTerm ||
-            member.nama_lengkap
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            member.no_anggota.toLowerCase().includes(searchTerm.toLowerCase());
-          const matchRt = !filterRt || member.rt === parseInt(filterRt);
-          const matchRw = !filterRw || member.rw === parseInt(filterRw);
-          return matchSearch && matchRt && matchRw;
-        })
-        .map((m) => m.no_anggota.split(".")[0]),
+        .filter(matchesInitialFilter)
+        .map((m) => (m.no_anggota || "").split(".")[0])
+        .filter(Boolean)
     );
 
-    // 2. Ambil semua anggota dari keluarga yang cocok
-    let results = members.filter((member) =>
-      matchingFamilyIds.has(member.no_anggota.split(".")[0]),
-    );
+    // 3. Get all members of families that match the initial filter
+    let results = members.filter((m) => {
+      const familyId = (m.no_anggota || "").split(".")[0];
+      return matchingFamilyIds.has(familyId);
+    });
 
-    // 3. Terapkan filter Jenis Anggota secara INDIVIDUAL jika dipilih
+    // 4. Further narrow down individual members if Tipo/Status filters are active
     if (filterJenis) {
-      results = results.filter(
-        (m) => m.jenis_anggota === filterJenis
-      );
+      results = results.filter((m) => m.jenis_anggota === filterJenis);
     }
-
-    // 4. Terapkan filter Status secara INDIVIDUAL jika dipilih
     if (filterStatus) {
       results = results.filter((m) => {
-        const s = (m.status || "Aktif").toLowerCase();
-        const f = filterStatus.toLowerCase();
-        return s === f;
+        const s = (m.status || "Aktif").trim().toLowerCase();
+        // Match "meninggal" as a substring to be safe with "meninggal dunia" vs "meninggal"
+        if (cleanStatus === "meninggal dunia") {
+          return s.includes("meninggal");
+        }
+        return s === cleanStatus;
       });
     }
 

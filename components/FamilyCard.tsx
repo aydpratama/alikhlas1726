@@ -591,20 +591,16 @@ export function FamilyCard({
               </button>
             )}
 
-            {isAdmin ? (
+            {isAdmin && !isIuranOnly && (
               <div className="flex items-center bg-white shadow-sm border border-slate-200 rounded-lg p-0.5 overflow-hidden">
-                {!isIuranOnly && (
-                  <>
-                    <button
-                      onClick={handleExportExcel}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
-                    >
-                      <FileDown className="w-3.5 h-3.5" />
-                      Excel
-                    </button>
-                    <div className="w-[1px] h-4 bg-slate-200" />
-                  </>
-                )}
+                <button
+                  onClick={handleExportExcel}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
+                >
+                  <FileDown className="w-3.5 h-3.5" />
+                  Excel
+                </button>
+                <div className="w-[1px] h-4 bg-slate-200" />
                 <button
                   onClick={handleExportPDF}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors"
@@ -613,7 +609,9 @@ export function FamilyCard({
                   PDF
                 </button>
               </div>
-            ) : (
+            )}
+
+            {!isAdmin && (
               <button
                 onClick={handleExportPDF}
                 className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-[11px] font-bold hover:bg-indigo-100 transition-all shadow-sm active:scale-95"
