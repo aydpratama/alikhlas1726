@@ -1,10 +1,11 @@
 "use client";
 
 import { Header } from "@/components/Header";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useMembers } from "@/hooks/pemulasaraan/useMembers";
 import { useDues } from "@/hooks/pemulasaraan/useDues";
+import { supabase } from "@/lib/supabase";
 import { InfoView } from "@/components/pemulasaraan/PemulasaraanInfo";
 import { MemberListView } from "@/components/pemulasaraan/MemberList";
 import { ReportView } from "@/components/pemulasaraan/Laporan";
@@ -13,9 +14,37 @@ import { OthersView } from "@/components/pemulasaraan/Lainlain";
 import { RegistrationDialog } from "@/components/RegistrationDialog";
 import { FamilyCard, FamilyMember } from "@/components/FamilyCard";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, FileText, Info as InfoIcon, LayoutGrid } from "lucide-react";
+import {
+  Users,
+  FileText,
+  Info as InfoIcon,
+  LayoutGrid,
+  Plus,
+} from "lucide-react";
 import Image from "next/image";
 import { toTitleCase } from "@/lib/utils";
+
+const BASE_START_YEAR = 2020;
+const BASE_END_YEAR = 2026;
+
+const buildDefaultYears = () => {
+  const currentYear = new Date().getFullYear();
+  const maxYear = Math.max(BASE_END_YEAR, currentYear);
+  return Array.from(
+    { length: maxYear - BASE_START_YEAR + 1 },
+    (_, idx) => BASE_START_YEAR + idx,
+  );
+};
+
+const normalizeYears = (years: number[]) =>
+  Array.from(
+    new Set(
+      years.filter(
+        (year) =>
+          Number.isInteger(year) && year >= BASE_START_YEAR && year <= 3000,
+      ),
+    ),
+  ).sort((a, b) => a - b);
 
 export default function PemulasaraanPage() {
   const {
@@ -30,6 +59,9 @@ export default function PemulasaraanPage() {
   const isIuranOnly = profile?.peran === "iuran";
   const [activeTab, setActiveTab] = useState(isMember ? "my-card" : "info");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] =
+    useState<number[]>(buildDefaultYears);
+  const [isAddingYear, setIsAddingYear] = useState(false);
   const [hasSetInitialTab, setHasSetInitialTab] = useState(false);
 
   // Set default tab for member when loaded
@@ -39,6 +71,38 @@ export default function PemulasaraanPage() {
       setHasSetInitialTab(true);
     }
   }, [isMember, hasSetInitialTab]);
+
+  const fetchAvailableYears = useCallback(async () => {
+    const [rpcRes, duesRes] = await Promise.all([
+      (supabase as any).rpc("ambil_tahun_tersedia"),
+      (supabase.from("view_rekap_iuran_tahunan") as any).select("tahun"),
+    ]);
+
+    const rpcYears = (rpcRes.data || [])
+      .map((item: { tahun?: number }) => Number(item.tahun))
+      .filter((year: number) => Number.isInteger(year));
+    const duesYears = (duesRes.data || [])
+      .map((item: { tahun?: number }) => Number(item.tahun))
+      .filter((year: number) => Number.isInteger(year));
+
+    return normalizeYears([...buildDefaultYears(), ...rpcYears, ...duesYears]);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadYears = async () => {
+      const years = await fetchAvailableYears();
+      if (!mounted || years.length === 0) return;
+      setAvailableYears(years);
+      setSelectedYear((prev) =>
+        years.includes(prev) ? prev : Math.max(...years),
+      );
+    };
+    loadYears();
+    return () => {
+      mounted = false;
+    };
+  }, [fetchAvailableYears]);
 
   // Hooks
   const {
@@ -156,7 +220,6 @@ export default function PemulasaraanPage() {
             </div>
           );
 
-
         return (
           <MemberListView
             members={members}
@@ -203,8 +266,65 @@ export default function PemulasaraanPage() {
     }
   };
 
-  // available years logic (simple range starting from 2020)
-  const availableYears = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
+  const handleAddYear = async () => {
+    if (!isSuperAdmin || isAddingYear) return;
+    const maxYear =
+      availableYears.length > 0
+        ? Math.max(...availableYears)
+        : new Date().getFullYear();
+    const nextYear = maxYear + 1;
+
+    setIsAddingYear(true);
+    const umumMembers = members.filter(
+      (m) => m.id && (m.jenis_anggota || "").trim().toLowerCase() === "umum",
+    );
+    const chunkSize = 20;
+    let error: any = null;
+
+    for (let i = 0; i < umumMembers.length; i += chunkSize) {
+      const chunk = umumMembers.slice(i, i + chunkSize);
+      const results = await Promise.all(
+        chunk.map(async (member) =>
+          (supabase as any).rpc("inisiasi_catatan_iuran_anggota", {
+            p_id_anggota: member.id,
+            p_tahun: nextYear,
+          }),
+        ),
+      );
+
+      const firstFatal = results.find((res: any) => {
+        if (!res?.error) return false;
+        const msg = String(res.error.message || "").toLowerCase();
+        return !(
+          msg.includes("duplicate") ||
+          msg.includes("already exists") ||
+          msg.includes("unique")
+        );
+      });
+
+      if (firstFatal) {
+        error = firstFatal.error;
+        break;
+      }
+    }
+    setIsAddingYear(false);
+
+    if (error) {
+      console.error("Gagal menambah tahun iuran di Supabase:", error);
+      alert(
+        `Gagal menambah tahun ${nextYear}: ${error.message || "Unknown error"}`,
+      );
+      return;
+    }
+    const years = await fetchAvailableYears();
+    if (years.length > 0) {
+      setAvailableYears(normalizeYears([...years, nextYear]));
+    } else {
+      setAvailableYears((prev) => normalizeYears([...prev, nextYear]));
+    }
+    setSelectedYear(nextYear);
+    mutateDues();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -242,27 +362,42 @@ export default function PemulasaraanPage() {
             {(activeTab === "member" ||
               activeTab === "laporan" ||
               activeTab === "my-card") && (
-                <div className="flex items-center gap-2 bg-white border-2 border-emerald-100 px-4 py-2.5 rounded-2xl group hover:border-emerald-500 transition-all shadow-sm">
-                  <FileText className="w-4 h-4 text-emerald-600" />
-                  <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                    Periode :
-                  </span>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="bg-transparent text-sm font-black text-emerald-700 outline-none cursor-pointer pr-1"
-                  >
-                    {availableYears.map((year) => (
-                      <option
-                        key={year}
-                        value={year}
-                        className="font-sans text-gray-900"
-                      >
-                        Tahun {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="flex items-center gap-2 bg-white border-2 border-emerald-100 px-4 py-2.5 rounded-2xl group hover:border-emerald-500 transition-all shadow-sm">
+                <FileText className="w-4 h-4 text-emerald-600" />
+                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                  Periode :
+                </span>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="bg-transparent text-sm font-black text-emerald-700 outline-none cursor-pointer pr-1"
+                >
+                  {availableYears.map((year) => (
+                    <option
+                      key={year}
+                      value={year}
+                      className="font-sans text-gray-900"
+                    >
+                      Tahun {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {isSuperAdmin &&
+              (activeTab === "member" ||
+                activeTab === "laporan" ||
+                activeTab === "my-card") && (
+                <button
+                  type="button"
+                  onClick={handleAddYear}
+                  disabled={isAddingYear}
+                  className="inline-flex items-center gap-1.5 px-3 py-2.5 bg-white border-2 border-emerald-100 rounded-2xl text-xs font-black text-emerald-700 hover:border-emerald-500 transition-all shadow-sm"
+                  title="Tambah periode tahun berikutnya"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {isAddingYear ? "Menyimpan..." : "Tambah Tahun"}
+                </button>
               )}
           </div>
         </div>
@@ -276,18 +411,28 @@ export default function PemulasaraanPage() {
                 ? [{ id: "my-card", label: "Kartu Saya", icon: FileText }]
                 : []),
               ...(isSuperAdmin ||
-                canManageIuranPemulasaraan ||
-                profile?.peran === "imam" ||
-                profile?.peran === "marbot"
+              canManageIuranPemulasaraan ||
+              profile?.peran === "imam" ||
+              profile?.peran === "marbot"
                 ? [
-                  ...(isSuperAdmin || canManageIuranPemulasaraan
-                    ? [
-                      { id: "member", label: "Anggota", icon: Users },
-                      ...(isSuperAdmin ? [{ id: "laporan", label: "Laporan", icon: FileText }] : []),
-                    ]
-                    : []),
-                  ...(!isIuranOnly ? [{ id: "lainnya", label: "Lainnya", icon: LayoutGrid }] : []),
-                ]
+                    ...(isSuperAdmin || canManageIuranPemulasaraan
+                      ? [
+                          { id: "member", label: "Anggota", icon: Users },
+                          ...(isSuperAdmin
+                            ? [
+                                {
+                                  id: "laporan",
+                                  label: "Laporan",
+                                  icon: FileText,
+                                },
+                              ]
+                            : []),
+                        ]
+                      : []),
+                    ...(!isIuranOnly
+                      ? [{ id: "lainnya", label: "Lainnya", icon: LayoutGrid }]
+                      : []),
+                  ]
                 : []),
             ].map((tab) => {
               const active = activeTab === tab.id;
@@ -295,10 +440,11 @@ export default function PemulasaraanPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center justify-center gap-2 px-6 py-2.5 rounded-full transition-all duration-300 whitespace-nowrap text-sm font-bold tracking-tight ${active
-                    ? "text-white"
-                    : "text-gray-600 hover:text-emerald-800"
-                    }`}
+                  className={`relative flex items-center justify-center gap-2 px-6 py-2.5 rounded-full transition-all duration-300 whitespace-nowrap text-sm font-bold tracking-tight ${
+                    active
+                      ? "text-white"
+                      : "text-gray-600 hover:text-emerald-800"
+                  }`}
                 >
                   {active && (
                     <motion.div
